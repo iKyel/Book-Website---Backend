@@ -2,8 +2,9 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
 import 'dotenv/config';
-import { userRoutes } from "./routes/userRoutes.js";
+import { authRouter } from "./routes/authRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,6 +12,7 @@ const MONGODB_URI = process.env.MONGODB_URI || '';
 
 app.use(morgan('dev'));
 app.use(express.json());    // Parsing json from request body
+app.use(cookieParser());    // Parsing cookie form request
 
 // Middleware for handling CORS Policy
 app.use(cors({      // Allow custom origins
@@ -21,11 +23,12 @@ app.use(cors({      // Allow custom origins
 }))
 
 app.get('/', (req, res) => {
-    res.send("Hello world!");
+    res.send("Home Page");
 })
 
-// Routes for users
-app.use('/users', userRoutes);
+// Routes for authentication
+app.use('/auth', authRouter);
+
 
 // Connect to db and load server if success
 try {
