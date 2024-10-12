@@ -3,6 +3,7 @@ import { UserModel } from "../models/UserModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { SECRET_KEY } from "../configs/jwtSecretKey.js";
+import { checkValidRegistation } from "../utils/checkValidRegistration.js";
 
 // Controller for login
 const loginUser = async (req: Request, res: Response) => {
@@ -35,20 +36,26 @@ const loginUser = async (req: Request, res: Response) => {
 // Controller for register
 const registerUser = async (req: Request, res: Response) => {
     const { fullName, userName, password } = req.body;
+    // Kiểm tra các thông tin đăng ký có hợp lệ ko?
+    const invalidMess: string | undefined = checkValidRegistation(fullName, userName, password);
+    if (invalidMess) {
+        res.status(400).json({ message: invalidMess });
+        return;
+    }
     try {
         // Ktra userName đã được đăng ký chưa
         const isHasUser = await UserModel.findOne({ userName }).exec();
         if (isHasUser) {
             res.status(400).json({ message: `Đã tồn tại người dùng có username này. Hãy dùng username khác!` });
-        } else {
-            bcrypt.hash(password, 10, async (err, hash) => {      // Hash password to store in DB
-                if (err) {
-                    res.status(500).json({ error: err });
-                }
-                await UserModel.create({ fullName, userName, password: hash })
-                res.status(200).json({ message: 'Đăng ký thành công' });
-            })
+            return;
         }
+        bcrypt.hash(password, 10, async (err, hash) => {      // Hash password to store in DB
+            if (err) {
+                res.status(500).json({ error: err });
+            }
+            await UserModel.create({ fullName, userName, password: hash })
+            res.status(200).json({ message: 'Đăng ký thành công' });
+        })
     } catch (err) {
         res.status(500).json({ error: err });
     }
