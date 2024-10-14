@@ -3,7 +3,6 @@ import { UserModel } from "../models/UserModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { SECRET_KEY } from "../configs/jwtSecretKey.js";
-import { checkValidRegistation } from "../utils/checkValidRegistration.js";
 
 // Controller for login
 const loginUser = async (req: Request, res: Response) => {
@@ -14,50 +13,49 @@ const loginUser = async (req: Request, res: Response) => {
         if (user) {
             bcrypt.compare(password, user.password, (err, result) => {
                 if (err) {
-                    res.status(500).json({ error: err });   // Sth error happend
+                    console.log(err);
+                    res.status(500).json({ error: 'Internal server error' });   // Sth error happend
                 } else {
                     if (result) {   // If password is valid then create token for user save in cookie
                         const token = jwt.sign({ userId: user._id, userName: user.userName }, SECRET_KEY, { expiresIn: '1d' });
                         res.cookie('token', token);
-                        res.status(200).json({ message: 'Đăng nhập thành công' });
+                        res.status(200).json({ message: 'Login successful' });
                     } else {    // else password is invalid
-                        res.status(400).json({ message: 'Mật khẩu không đúng' });
+                        res.status(401).json({ message: 'Invalid username or password' });
                     }
                 }
             })
         } else {
-            res.status(400).json({ message: `User chưa được đăng ký!` })
+            res.status(401).json({ message: 'Invalid username or password' })
         }
     } catch (err) {
-        res.status(500).json({ error: err })
+        console.log(err);
+        res.status(500).json({ error: 'Internal server error' })
     }
 }
 
 // Controller for register
 const registerUser = async (req: Request, res: Response) => {
     const { fullName, userName, password } = req.body;
-    // Kiểm tra các thông tin đăng ký có hợp lệ ko?
-    const invalidMess: string | undefined = checkValidRegistation(fullName, userName, password);
-    if (invalidMess) {
-        res.status(400).json({ message: invalidMess });
-        return;
-    }
     try {
         // Ktra userName đã được đăng ký chưa
         const isHasUser = await UserModel.findOne({ userName }).exec();
         if (isHasUser) {
-            res.status(400).json({ message: `Đã tồn tại người dùng có username này. Hãy dùng username khác!` });
+            res.status(400).json({ message: 'This username already exists. Please choose a different username!' });
             return;
         }
         bcrypt.hash(password, 10, async (err, hash) => {      // Hash password to store in DB
             if (err) {
-                res.status(500).json({ error: err });
+                console.log(err);
+                res.status(500).json({ error: 'Internal server error' });
+                return;
             }
             await UserModel.create({ fullName, userName, password: hash })
-            res.status(200).json({ message: 'Đăng ký thành công' });
+            res.status(201).json({ message: 'Register successful' });
         })
     } catch (err) {
-        res.status(500).json({ error: err });
+        console.log(err);
+        res.status(500).json({ error: 'Internal server error' });
     }
 }
 

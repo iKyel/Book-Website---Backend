@@ -34,7 +34,7 @@ app.use('/auth', authRouter);
 try {
     await mongoose.connect(MONGODB_URI);
     console.log('App connected to database');
-    app.listen(PORT, () => {    // open server at port ''3000''
+    app.listen(PORT, () => {    // open server at port '8000'
         console.log(`App is listening to port: http://localhost:${PORT}`);
     })
 } catch (error) {
