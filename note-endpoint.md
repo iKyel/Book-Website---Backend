@@ -29,6 +29,7 @@
         + 500: { message: 'Lỗi hệ thống máy chủ.' }
     
     - PUT '/changePassword': Cập nhật mật khẩu người dùng
-        + 200: { message: 'Cập nhật mật khẩu thành công!', user: updatedUser }
+        + 200: { message: 'Cập nhật mật khẩu thành công!' }
+        + 401: { message: 'Mật khẩu không khớp. Hãy nhập lại!' }
         + 404: { message: 'Không tìm thấy người dùng!' }
         + 500: { message: 'Lỗi hệ thống máy chủ.' }
