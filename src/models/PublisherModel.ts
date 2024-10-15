@@ -12,4 +12,4 @@ const PublisherSchema = new mongoose.Schema(
     }
 );
 
-export const PublisherModel = mongoose.model('publisher', PublisherSchema);
+export const PublisherModel = mongoose.model('publisher', PublisherSchema, 'Publishers');

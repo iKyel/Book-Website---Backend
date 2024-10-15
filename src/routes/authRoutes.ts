@@ -6,7 +6,7 @@ const authRouter = express.Router();
 
 // Route for auth
 authRouter.get('/', authenticate, (req, res) => {
-    res.status(200).json({ message: 'Authentication' });
+    res.status(200).json({ message: 'Xác thực thành công' });
 })
 // Route for login
 authRouter.post('/login', loginUser);

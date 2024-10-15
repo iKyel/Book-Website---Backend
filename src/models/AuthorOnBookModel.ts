@@ -13,4 +13,4 @@ const AuthorOnBookSchema = new mongoose.Schema(
     }
 );
 
-export const AuthorOnBookModel = mongoose.model('authorOnBook', AuthorOnBookSchema);
+export const AuthorOnBookModel = mongoose.model('authorOnBook', AuthorOnBookSchema, 'AuthorOnBooks');

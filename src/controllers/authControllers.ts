@@ -11,24 +11,20 @@ const loginUser = async (req: Request, res: Response) => {
         // Check userName has existed?
         const user = await UserModel.findOne({ userName }).exec();
         if (user) {
-            bcrypt.compare(password, user.password, (err, result) => {
-                if (err) {
-                    res.status(500).json({ error: err });   // Sth error happend
-                } else {
-                    if (result) {   // If password is valid then create token for user save in cookie
-                        const token = jwt.sign({ userId: user._id, userName: user.userName }, SECRET_KEY, { expiresIn: '1d' });
-                        res.cookie('token', token);
-                        res.status(200).json({ message: 'Đăng nhập thành công' });
-                    } else {    // else password is invalid
-                        res.status(400).json({ message: 'Mật khẩu không đúng' });
-                    }
-                }
-            })
+            const isCompare = await bcrypt.compare(password, user.password);
+            if (isCompare) {   // If password is valid then create token for user save in cookie
+                const token = jwt.sign({ userId: user._id, userName: user.userName }, SECRET_KEY, { expiresIn: '1d' });
+                res.cookie('token', token);
+                res.status(200).json({ message: 'Đăng nhập thành công!', userData: { fullName: user.fullName, userName: user.userName } });
+            } else {    // else password is invalid
+                res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng!' });
+            }
         } else {
-            res.status(400).json({ message: `User chưa được đăng ký!` })
+            res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng!' })
         }
     } catch (err) {
-        res.status(500).json({ error: err })
+        console.log(err);
+        res.status(500).json({ message: 'Lỗi hệ thống máy chủ.' })
     }
 }
 
@@ -39,25 +35,22 @@ const registerUser = async (req: Request, res: Response) => {
         // Ktra userName đã được đăng ký chưa
         const isHasUser = await UserModel.findOne({ userName }).exec();
         if (isHasUser) {
-            res.status(400).json({ message: `Đã tồn tại người dùng có username này. Hãy dùng username khác!` });
-        } else {
-            bcrypt.hash(password, 10, async (err, hash) => {      // Hash password to store in DB
-                if (err) {
-                    res.status(500).json({ error: err });
-                }
-                await UserModel.create({ fullName, userName, password: hash })
-                res.status(200).json({ message: 'Đăng ký thành công' });
-            })
+            res.status(400).json({ message: 'Tên đăng nhập đã tồn tại. Hãy dùng tên khác!' });
+            return;
         }
+        const hashedPassword = await bcrypt.hash(password, 10);      // Hash password to store in DB
+        await UserModel.create({ fullName, userName, password: hashedPassword });
+        res.status(201).json({ message: 'Đăng ký thành công!' });
     } catch (err) {
-        res.status(500).json({ error: err });
+        console.log(err);
+        res.status(500).json({ message: 'Lỗi hệ thống máy chủ.' });
     }
 }
 
 // Controller for logout
 const logoutUser = (req: Request, res: Response) => {
     res.clearCookie('token');
-    res.status(200).json({ message: 'Đăng xuất thành công' });
+    res.status(200).json({ message: 'Đăng xuất thành công!' });
 };
 
 export { loginUser, registerUser, logoutUser };
