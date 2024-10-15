@@ -8,7 +8,7 @@ import { profileRouter } from "./routes/profileRoutes.js";
 import { authRouter } from "./routes/authRoutes.js";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 const MONGODB_URI = process.env.MONGODB_URI || '';
 
 app.use(morgan('dev'));
@@ -17,7 +17,7 @@ app.use(cookieParser());    // Parsing cookie form request
 
 // Middleware for handling CORS Policy
 app.use(cors({      // Allow custom origins
-    origin: 'http://localhost:5173',
+    origin: 'http://localhost:3000',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
     credentials: true
@@ -38,7 +38,7 @@ app.use('/auth', authRouter);
 try {
     await mongoose.connect(MONGODB_URI);
     console.log('App connected to database');
-    app.listen(PORT, () => {    // open server at port ''3000''
+    app.listen(PORT, () => {    // open server at port '8000'
         console.log(`App is listening to port: http://localhost:${PORT}`);
     })
 } catch (error) {
