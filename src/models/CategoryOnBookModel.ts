@@ -13,4 +13,4 @@ const CategoryOnBookSchema = new mongoose.Schema(
     }
 );
 
-export const CategoryOnBookModel = mongoose.model('categoryOnBook', CategoryOnBookSchema);
+export const CategoryOnBookModel = mongoose.model('categoryOnBook', CategoryOnBookSchema, 'CategoryOnBooks');

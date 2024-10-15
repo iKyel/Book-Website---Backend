@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { UserModel } from "../models/UserModel.js";
-import bcrypt, { hash } from "bcrypt";
+import bcrypt from "bcrypt";
 
 // Get profile
 const getProfileUser = async (req: Request, res: Response) => {
@@ -8,13 +8,13 @@ const getProfileUser = async (req: Request, res: Response) => {
     try {
         const user = await UserModel.findOne({ userName: userName }).exec();
         if (user) {
-            res.status(200).json({ message: 'Profile retrieved successfully', user: user });
+            res.status(200).json({ message: 'Lấy thông tin người dùng thành công!', user: user });
         } else {
-            res.status(404).json({ message: 'User not found' });
+            res.status(404).json({ message: 'Không tìm thấy người dùng!' });
         }
     } catch (err) {
         console.log(err)
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ message: 'Lỗi hệ thống máy chủ.' });
     }
 }
 
@@ -25,21 +25,15 @@ const changePassword = async (req: Request, res: Response) => {
         const user = await UserModel.findOne({ userName: userName }).exec();
         if (user) {
             // Hash the new password before updating
-            bcrypt.hash(newPassword, 10, async (err, hashedPassword) => {
-                if (err) throw err;
-                const updatedUser = await UserModel.findOneAndUpdate({ userName }, { password: hashedPassword });
-                if (updatedUser) {
-                    res.status(200).json({ message: 'Password updated successfully', user: updatedUser });
-                } else {
-                    res.status(500).json({ message: 'Failed to update password' });
-                }
-            });
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            const updatedUser = await UserModel.findOneAndUpdate({ userName }, { password: hashedPassword });
+            res.status(200).json({ message: 'Cập nhật mật khẩu thành công!', user: updatedUser });
         } else {
-            res.status(404).json({ message: 'User not found' });
+            res.status(404).json({ message: 'Không tìm thấy người dùng!' });
         }
     } catch (err) {
         console.log(err);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ message: 'Lỗi hệ thống máy chủ.' });
     }
 }
 

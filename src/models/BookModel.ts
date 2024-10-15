@@ -11,7 +11,7 @@ const BookSchema = new mongoose.Schema(
             required: true
         },
         discount: {
-            type: String,
+            type: Number,
             default: 0
         },
         salePrice: {
@@ -46,4 +46,4 @@ const BookSchema = new mongoose.Schema(
     }
 );
 
-export const BookModel = mongoose.model('book', BookSchema);
+export const BookModel = mongoose.model('book', BookSchema, 'Books');
