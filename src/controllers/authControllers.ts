@@ -16,12 +16,11 @@ const loginUser = async (req: Request, res: Response) => {
                 const token = jwt.sign({ userId: user._id, userName: user.userName }, SECRET_KEY, { expiresIn: '1d' });
                 res.cookie('token', token);
                 res.status(200).json({ message: 'Đăng nhập thành công!', userData: { fullName: user.fullName, userName: user.userName } });
-            } else {    // else password is invalid
-                res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng!' });
+                return;
             }
-        } else {
-            res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng!' })
         }
+        // userName or password not correct
+        res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng!' })
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: 'Lỗi hệ thống máy chủ.' })
