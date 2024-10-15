@@ -21,4 +21,4 @@ const OrderDetailSchema = new mongoose.Schema(
     }
 );
 
-export const OrderDetailModel  = mongoose.model('orderdetail', OrderDetailSchema);
+export const OrderDetailModel  = mongoose.model('orderdetail', OrderDetailSchema, 'OrderDetails');
