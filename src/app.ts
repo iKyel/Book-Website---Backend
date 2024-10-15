@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import 'dotenv/config';
 import { profileRouter } from "./routes/profileRoutes.js";
 import { authRouter } from "./routes/authRoutes.js";
+import { bookRouter } from "./routes/bookRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -33,6 +34,8 @@ app.use('/profile', profileRouter);
 // Routes for authentication
 app.use('/auth', authRouter);
 
+// Routes for books
+app.use('/books', bookRouter);
 
 // Connect to db and load server if success
 try {
