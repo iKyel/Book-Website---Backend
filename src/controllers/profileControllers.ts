@@ -32,7 +32,7 @@ const changePassword = async (req: Request, res: Response) => {
                 // Hash the new password before updating
                 const hashedPassword = await bcrypt.hash(newPassword, 10);
                 const updatedUser = await UserModel.findOneAndUpdate({ userName }, { password: hashedPassword });
-                res.status(200).json({ message: 'Cập nhật mật khẩu thành công!', user: updatedUser });
+                res.status(200).json({ message: 'Cập nhật mật khẩu thành công!'});
             }
         } else {
             res.status(404).json({ message: 'Không tìm thấy người dùng!' });
