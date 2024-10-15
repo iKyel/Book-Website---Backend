@@ -1,6 +1,8 @@
 import express from "express";
-import { getProfileUser } from "../controllers/profileControllers.js";
+import { changePassword, getProfileUser } from "../controllers/profileControllers.js";
 
 export const profileRouter = express.Router();
 
 profileRouter.post('/getProfile', getProfileUser);
+
+profileRouter.put('/changePassword', changePassword);
