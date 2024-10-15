@@ -2,27 +2,20 @@
 
 * '/auth': Các chức năng liên quan đến việc xác thực người dùng
     - GET '/': Kiểm tra token để xác thực người dùng
-        + 200: {“message”: “Authentication”}
-        + 401: {“message”: “Unauthenticated”}
-        + 500: {“error”: “Internal server error”}
+        + 200: { message: 'Xác thực thành công' }
+        + 401: { message: 'Token chưa có: Người dùng chưa đăng nhập!' }
+        + 401: { message: 'Token không hợp lệ: Không thấy người dùng!' }
+        + 403: { message: 'Token đã hết hạn. Hãy đăng nhập lại!' }
+
     - POST ‘/login’: Kiểm tra và lưu thông tin đăng nhập
-        + 500: {“error”: “Internal server error”}
-        + 200: {“message”: “Login successful”}
-        + 401: {“message”: “Invalid username or password”}
+        + 200: { message: 'Đăng nhập thành công', userData: { userId: user._id, fullName: user.fullName } }
+        + 401: { message: 'Tên đăng nhập hoặc mật khẩu không đúng!' }
+        + 500: { message: 'Lỗi hệ thống máy chủ.' }
+
     - POST ‘/register’: Kiểm tra và lưu thông tin đăng ký
-        + 400: { message: 'This username already exists. Please choose a different username!' }
-        + 500: { error: 'Internal server error' }
-        + 201: { message: 'Register successful' }
+        + 201: { message: 'Đăng ký thành công' }
+        + 400: { message: 'Tên đăng nhập đã tồn tại. Hãy dùng tên khác!' }
+        + 500: { message: 'Lỗi hệ thống máy chủ.' }
+
     - GET ‘/logout’: Đăng xuất tài khoản
         + 200: { message: 'Đăng xuất thành công' }
-
-* '/profile: Các chức năng liên quan đến quản lý thông tin cá nhân
-    - POST ‘/getProfile’: Lấy thông tin cá nhân
-        + 200: { message: 'Profile retrieved successfully', user: user_Obj }
-        + 404: { message: 'User not found' }
-        + 500: { error: 'Internal server error' }
-    - PUT ‘/changePassword: Cập nhật mật khẩu
-        + 200: { message: 'Password updated successfully', user: updatedUser}	
-        + 500: { message: 'Failed to update password' }
-        + 404: { message: 'User not found' }
-
