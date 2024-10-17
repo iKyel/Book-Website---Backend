@@ -1,18 +1,43 @@
 import express from "express";
-import { getAllBooks, getAllBooksByFilter, getAllBooksByOrder, getBooksByName } from "../controllers/bookControllers.js";
+import {
+    getAllBooks,
+    getBooksByPriceRange,
+    getNewestBooks,
+    getBooksByName,
+    getBestSellerBooks,
+    getBooksByCategory,
+    getOldestBooks,
+    getAllBooksSortedByTitleAsc,
+    getAllBooksSortedByTitleDesc
+} from "../controllers/bookControllers.js";
 
 const bookRouter = express.Router();
 
-// Get list of books
+// Lấy danh sách các sách
 bookRouter.get('/getBooks', getAllBooks);
 
-// Get list of books by sorted order
-bookRouter.get('/getBooksByOrder', getAllBooksByOrder);
+// Lấy danh sách các sách mới nhất
+bookRouter.get('/getNewestBooks', getNewestBooks);
 
-// Get list of books by filter
-bookRouter.get('/getBooksByFilter', getAllBooksByFilter);
+// Lấy danh sách các sách cũ nhất
+bookRouter.get('/getOldestBooks', getOldestBooks);
 
-// Get list of books by search name
+// Lấy danh sách các sách bán chạy
+bookRouter.get('/getBestSellerBooks', getBestSellerBooks);
+
+// Lấy danh sách các sách theo tên A-Z
+bookRouter.get('/getAllBooksSortedByTitleAsc', getAllBooksSortedByTitleAsc);
+
+// Lấy danh sách các sách theo tên Z-A
+bookRouter.get('/getAllBooksSortedByTitleDesc', getAllBooksSortedByTitleDesc);
+
+// Lấy danh sách sách theo khoảng giá
+bookRouter.get('/getBooksByPriceRange/price=:minPrice-:maxPrice', getBooksByPriceRange);
+
+// Lấy danh sách sách theo thể loại
+bookRouter.get('/getBooksByCategory', getBooksByCategory);
+
+// Lấy danh sách các sách theo tên tìm kiếm
 bookRouter.get('/getBooksByName', getBooksByName);
 
 export { bookRouter };
