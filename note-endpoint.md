@@ -32,3 +32,16 @@
         + 200: { message: 'Cập nhật mật khẩu thành công!', user: updatedUser }
         + 404: { message: 'Không tìm thấy người dùng!' }
         + 500: { message: 'Lỗi hệ thống máy chủ.' }
+
+/----------------------------------------------------/
+
+* '/books': Các chức năng liên quan đến việc lấy sách
+    - GET '/getBooks': Lấy danh sách các sách
+        + 200: { message: 'Lấy danh sách các sách thành công!', listBooks }
+        + 500: { message: 'Lỗi hệ thống máy chủ!' }
+    - GET '/getFilteredBooks': Lấy danh sách các sách theo tiêu chí lọc và sắp xếp
+        + 200: { message: 'Lấy danh sách các sách thành công!', listBooks }
+        + 500: { message: 'Lỗi hệ thống máy chủ!' }
+    - GET '/getBooksByName': Lấy danh sách các sách theo tên tìm kiếm
+        + 200: { message: 'Lấy danh sách các sách thành công!', listBooks }
+        + 500: { message: 'Lỗi hệ thống máy chủ!' }
