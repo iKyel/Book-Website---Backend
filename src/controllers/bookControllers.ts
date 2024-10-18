@@ -2,15 +2,21 @@ import { Request, Response } from "express";
 import { BookModel } from "../models/BookModel.js";
 import { CategoryOnBookModel } from "../models/CategoryOnBookModel.js";
 import { CategoryModel } from "../models/CategoryModel.js";
+import { PublisherModel } from "../models/PublisherModel.js";
+import { AuthorModel } from "../models/AuthorModel.js";
+import { AuthorOnBookModel } from "../models/AuthorOnBookModel.js";
 
 const BOOKS_PER_PAGE = 16;
 
-// Lấy danh sách các sách
+/**
+ * @desc    Lấy tất cả các sách
+ * @route   GET '/books/getAllBooks'
+ */
 const getAllBooks = async (req: Request, res: Response) => {
     const { currentPage } = req.body;
     try {
         const listBooks = await BookModel.find()
-            .select(['title', 'discount', 'salePrice', 'imageURL'])
+            .select(['title', 'salePrice', 'imageURL'])
             .skip((currentPage - 1) * BOOKS_PER_PAGE)
             .limit(BOOKS_PER_PAGE)
             .exec();
@@ -21,17 +27,20 @@ const getAllBooks = async (req: Request, res: Response) => {
     }
 }
 
-// Lấy danh sách các sách theo tên tìm kiếm
+/**
+ * @desc    Lấy danh sách các sách theo tên tìm kiếm
+ * @route   GET '/books/getBooksByName'
+ */
 const getBooksByName = async (req: Request, res: Response) => {
     try {
         const { searchName } = req.body || '';
         const listBooks = await BookModel.find({
             title: {
-                $regex: searchName,     // Dùng biểu thức chính quy để tìm kiếm
-                $options: 'i'   // Tìm kiếm không phân biệt hoa thường
+                $regex: searchName,
+                $options: 'i'
             }
         })
-            .select(['title', 'discount', 'salePrice', 'imageURL'])
+            .select(['title', 'salePrice', 'imageURL'])
             .exec();
         res.status(200).json({ message: 'Lấy danh sách các sách thành công!', listBooks });
     } catch (err) {
@@ -49,7 +58,10 @@ type SortedFields = {
     createAt?: any
 }
 
-// Lấy danh sách các sách theo lọc, tìm kiếm, sắp xếp theo 1 tiêu chí (a-z, z-a, newest, oldest, bestseller)
+/**
+ * @desc    Lấy danh sách các sách theo lọc, tìm kiếm, sắp xếp theo 1 tiêu chí (a-z, z-a, newest, oldest, bestseller)
+ * @route   GET '/books/getFilteredBooks'
+ */
 const getFilteredBooks = async (req: Request, res: Response) => {
     const { categoryNames, priceRange, sortByOrder, currentPage } = req.body;
     let args: FilteredFields = {};
@@ -59,7 +71,7 @@ const getFilteredBooks = async (req: Request, res: Response) => {
             const { minPrice, maxPrice } = priceRange;
             args.salePrice = {
                 $gte: Number(minPrice) || 0,
-                $lte: Number(maxPrice) || Infinity,
+                $lte: Number(maxPrice) || Number.MAX_VALUE,
             };
         }
         // Lọc theo danh mục sách
@@ -85,7 +97,7 @@ const getFilteredBooks = async (req: Request, res: Response) => {
         let listBooks = [];
         if (sortByOrder !== 'best-seller') {
             listBooks = await BookModel.find(args)
-                .select(['title', 'discount', 'salePrice', 'imageURL'])
+                .select(['title', 'salePrice', 'imageURL'])
                 .sort(sortOption)
                 .skip((currentPage - 1) * BOOKS_PER_PAGE)
                 .limit(BOOKS_PER_PAGE)
@@ -100,17 +112,17 @@ const getFilteredBooks = async (req: Request, res: Response) => {
                     foreignField: 'bookId',
                     as: 'orders'
                 })
-                .addFields({    // Thêm trường tổng số lượng bán của mỗi sách
+                .addFields({
                     totalQuantitySold: { $sum: '$orders.quantity' }
                 })
-                .project({      // select các trường
+                .project({
                     _id: 1,
                     title: 1,
                     salePrice: 1,
                     imageURL: 1,
                     totalQuantitySold: 1
                 })
-                .sort({ totalQuantitySold: -1 }) // Sắp xếp theo tổng số lượng bán giảm dần
+                .sort({ totalQuantitySold: -1 })
                 .skip((currentPage - 1) * BOOKS_PER_PAGE)
                 .limit(BOOKS_PER_PAGE)
                 .exec();
@@ -122,4 +134,62 @@ const getFilteredBooks = async (req: Request, res: Response) => {
     }
 }
 
-export { getAllBooks, getFilteredBooks, getBooksByName };
+
+type NewBookType = {
+    title: string,
+    publisherName: string,
+    categoryNames: string[],
+    authorNames: string[],
+    discount: number,
+    salePrice: number,
+    quantity: number,
+    publishedYear: number,
+    size: number[],
+    coverForm: "Soft" | "Hard",
+    content: string,
+    imageURL: string
+}
+
+/**
+ * @desc    Thêm sách vào cơ sở dữ liệu
+ * @route   POST '/books/createBook'
+ */
+const insertNewBook = async (req: Request, res: Response) => {
+    try {
+        const bookInfo: NewBookType = req.body;
+        const publisherId = (await PublisherModel.findOne({ publisherName: bookInfo.publisherName }).exec())?._id;
+        const categoryIds = (await CategoryModel.find({ categoryName: { $in: bookInfo.categoryNames } }).exec()).map(category => category._id);
+        const authorIds = (await AuthorModel.find({ authorName: { $in: bookInfo.authorNames } }).exec()).map(author => author._id);
+        // Insert book into 'Books' collection
+        const newBook = await BookModel.create({
+            title: bookInfo.title,
+            publisherId: publisherId,
+            discount: bookInfo.discount,
+            salePrice: bookInfo.salePrice,
+            quantity: bookInfo.quantity,
+            publishedYear: bookInfo.publishedYear,
+            size: bookInfo.size,
+            coverForm: bookInfo.coverForm,
+            content: bookInfo.content,
+            imageURL: bookInfo.imageURL
+        });
+        // Insert authorOnBooks into 'AuthorOnBooks' collection
+        const authorOnBooks = authorIds.map(authorId => ({
+            authorId,
+            bookId: newBook._id
+        }));
+        await AuthorOnBookModel.insertMany(authorOnBooks);
+        // Insert categoryOnBooks into 'CategoryOnBooks' collection
+        const categoryOnBooks = categoryIds.map(categoryId => ({
+            categoryId,
+            bookId: newBook._id
+        }));
+        await CategoryOnBookModel.insertMany(categoryOnBooks);
+        res.status(200).json({message: "Thêm sách thành công!"});
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({message: "Lỗi máy chủ hoặc dữ liệu thêm vào ko phù hợp!"});
+    }
+}
+
+export { getAllBooks, getFilteredBooks, getBooksByName, insertNewBook };
