@@ -2,7 +2,8 @@ import express from "express";
 import {
     getAllBooks,
     getBooksByName,
-    getFilteredBooks
+    getFilteredBooks,
+    insertNewBook
 } from "../controllers/bookControllers.js";
 
 const bookRouter = express.Router();
@@ -15,5 +16,8 @@ bookRouter.get('/getFilteredBooks', getFilteredBooks);
 
 // Lấy danh sách các sách theo tên tìm kiếm
 bookRouter.get('/getBooksByName', getBooksByName);
+
+// Thêm sách vào csdl
+bookRouter.post('/createBook', insertNewBook);
 
 export { bookRouter };
