@@ -17,7 +17,7 @@ app.use(cookieParser());    // Parsing cookie form request
 
 // Middleware for handling CORS Policy
 app.use(cors({      // Allow custom origins
-    origin: 'http://localhost:3000',
+    origin: 'https://book-website-frontend.vercel.app',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
     credentials: true
