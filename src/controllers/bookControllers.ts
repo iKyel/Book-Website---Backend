@@ -56,7 +56,7 @@ const getFilteredBooks = async (req: Request, res: Response) => {
     try {
         // Lọc theo khoảng giá
         if (priceRange) {
-            const [minPrice, maxPrice] = priceRange.split("-");
+            const { minPrice, maxPrice } = priceRange;
             args.salePrice = {
                 $gte: Number(minPrice) || 0,
                 $lte: Number(maxPrice) || Infinity,
