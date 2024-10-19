@@ -20,7 +20,10 @@ const getAllBooks = async (req: Request, res: Response) => {
             .skip((currentPage - 1) * BOOKS_PER_PAGE)
             .limit(BOOKS_PER_PAGE)
             .exec();
-        res.status(200).json({ message: 'Lấy danh sách các sách thành công!', listBooks })
+        res.status(200).json({
+            message: 'Lấy danh sách các sách thành công!',
+            listBooks
+        })
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: 'Lỗi hệ thống máy chủ!' });
@@ -33,7 +36,7 @@ const getAllBooks = async (req: Request, res: Response) => {
  */
 const getBooksByName = async (req: Request, res: Response) => {
     try {
-        const { searchName } = req.body || '';
+        const { searchName, currentPage } = req.body;
         const listBooks = await BookModel.find({
             title: {
                 $regex: searchName,
@@ -41,8 +44,13 @@ const getBooksByName = async (req: Request, res: Response) => {
             }
         })
             .select(['title', 'salePrice', 'imageURL'])
+            .skip((currentPage - 1) * BOOKS_PER_PAGE)
+            .limit(BOOKS_PER_PAGE)
             .exec();
-        res.status(200).json({ message: 'Lấy danh sách các sách thành công!', listBooks });
+        res.status(200).json({
+            message: 'Lấy danh sách các sách thành công!',
+            listBooks
+        });
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: 'Lỗi hệ thống máy chủ!' });
@@ -127,7 +135,10 @@ const getFilteredBooks = async (req: Request, res: Response) => {
                 .limit(BOOKS_PER_PAGE)
                 .exec();
         }
-        res.status(200).json({ message: 'Lấy danh sách các sách thành công!', listBooks });
+        res.status(200).json({
+            message: 'Lấy danh sách các sách thành công!',
+            listBooks
+        });
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: 'Lỗi hệ thống máy chủ!' });
@@ -185,11 +196,28 @@ const insertNewBook = async (req: Request, res: Response) => {
             bookId: newBook._id
         }));
         await CategoryOnBookModel.insertMany(categoryOnBooks);
-        res.status(200).json({message: "Thêm sách thành công!"});
+        res.status(200).json({ message: "Thêm sách thành công!" });
     } catch (err) {
         console.log(err);
-        res.status(500).json({message: "Lỗi máy chủ hoặc dữ liệu thêm vào ko phù hợp!"});
+        res.status(500).json({ message: "Lỗi máy chủ hoặc dữ liệu thêm vào ko phù hợp!" });
     }
 }
 
-export { getAllBooks, getFilteredBooks, getBooksByName, insertNewBook };
+/**
+ * @desc    Lấy danh sách các thể loại
+ * @route   POST '/books/getCategories'
+ */
+const getCategories = async (req: Request, res: Response) => {
+    try {
+        const categories = await CategoryModel.find().exec();
+        res.status(200).json({
+            message: 'Lấy danh sách các thể loại thành công!',
+            categories
+        })
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: 'Lỗi hệ thống máy chủ!' });
+    }
+}
+
+export { getAllBooks, getFilteredBooks, getBooksByName, insertNewBook, getCategories };

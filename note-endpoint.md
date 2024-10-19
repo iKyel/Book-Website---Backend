@@ -23,13 +23,14 @@
 /----------------------------------------------------/
 
 * '/profile': Các chức năng liên quan đến quản lý thông tin cá nhân
-    - POST '/getProfile': Lấy thông tin cá nhân của người dùng
+    - GET '/getProfile': Lấy thông tin cá nhân của người dùng
         + 200: { message: 'Lấy thông tin người dùng thành công!', user: user }
         + 404: { message: 'Không tìm thấy người dùng!' }
         + 500: { message: 'Lỗi hệ thống máy chủ.' }
     
     - PUT '/changePassword': Cập nhật mật khẩu người dùng
         + 200: { message: 'Cập nhật mật khẩu thành công!', user: updatedUser }
+        + 400: { message: 'Mật khẩu cũ bị sai, hãy nhập lại!' }
         + 404: { message: 'Không tìm thấy người dùng!' }
         + 500: { message: 'Lỗi hệ thống máy chủ.' }
 
@@ -39,9 +40,12 @@
     - GET '/getBooks': Lấy danh sách các sách
         + 200: { message: 'Lấy danh sách các sách thành công!', listBooks }
         + 500: { message: 'Lỗi hệ thống máy chủ!' }
-    - GET '/getFilteredBooks': Lấy danh sách các sách theo tiêu chí lọc và sắp xếp
+    - POST '/getFilteredBooks': Lấy danh sách các sách theo tiêu chí lọc và sắp xếp
         + 200: { message: 'Lấy danh sách các sách thành công!', listBooks }
         + 500: { message: 'Lỗi hệ thống máy chủ!' }
-    - GET '/getBooksByName': Lấy danh sách các sách theo tên tìm kiếm
+    - POST '/getBooksByName': Lấy danh sách các sách theo tên tìm kiếm
         + 200: { message: 'Lấy danh sách các sách thành công!', listBooks }
+        + 500: { message: 'Lỗi hệ thống máy chủ!' }
+    - GET '/getCategories': Lấy danh sách các thể loại
+        + 200: { message: 'Lấy danh sách các thể loại thành công!', categories}
         + 500: { message: 'Lỗi hệ thống máy chủ!' }
