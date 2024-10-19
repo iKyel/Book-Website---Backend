@@ -5,10 +5,12 @@ import { UserModel } from "../models/UserModel.js";
 import mongoose from "mongoose";
 
 // Define DataType extends Request to store 'user'
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
     user?: {
-        _id: mongoose.Types.ObjectId;
-        userName: string;
+        _id: mongoose.Types.ObjectId,
+        fullName: string,
+        userName: string,
+        password: string
     };
 }
 
@@ -32,7 +34,7 @@ async function authenticate(req: AuthenticatedRequest, res: Response, next: Next
                 next();
             }
         } catch (error) {
-            console.error('Error during token verification:', error);
+            console.error('Lỗi khi xác thực token của người dùng:', error);
             res.status(403).json({ message: 'Token đã hết hạn. Hãy đăng nhập lại!' });
         }
     }
