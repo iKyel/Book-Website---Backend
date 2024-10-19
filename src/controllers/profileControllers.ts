@@ -1,14 +1,17 @@
 import { Request, Response } from "express";
 import { UserModel } from "../models/UserModel.js";
 import bcrypt from "bcrypt";
+import { AuthenticatedRequest } from "../middlewares/authenticateToken.js";
 
 // Get profile
-const getProfileUser = async (req: Request, res: Response) => {
-    const { userName } = req.body;
+const getProfileUser = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const user = await UserModel.findOne({ userName: userName }).exec();
+        const user = req.user;
         if (user) {
-            res.status(200).json({ message: 'Lấy thông tin người dùng thành công!', user: user });
+            res.status(200).json({
+                message: 'Lấy thông tin người dùng thành công!',
+                user: { userId: user._id, userName: user.userName, fullName: user.fullName }
+            });
         } else {
             res.status(404).json({ message: 'Không tìm thấy người dùng!' });
         }
@@ -19,20 +22,23 @@ const getProfileUser = async (req: Request, res: Response) => {
 }
 
 // update password
-const changePassword = async (req: Request, res: Response) => {
-    const { userName, oldPassword, newPassword } = req.body;
+const changePassword = async (req: AuthenticatedRequest, res: Response) => {
+    const { oldPassword, newPassword } = req.body;
+    const user = req.user;
     try {
-        const user = await UserModel.findOne({ userName: userName }).exec();
         if (user) {
-            // Check oldPassword is correct?
-            const isCorrect = await bcrypt.compare(oldPassword, user.password);
-            if (!isCorrect) {
-                res.send(401).json({ message: 'Mật khẩu không khớp. Hãy nhập lại!' });
-            } else {
+            // So sánh mật khẩu cũ
+            const isCompare = await bcrypt.compare(oldPassword, user.password);
+            if (isCompare) {
                 // Hash the new password before updating
                 const hashedPassword = await bcrypt.hash(newPassword, 10);
-                const updatedUser = await UserModel.findOneAndUpdate({ userName }, { password: hashedPassword });
-                res.status(200).json({ message: 'Cập nhật mật khẩu thành công!'});
+                await UserModel.findOneAndUpdate({ _id: user._id }, { password: hashedPassword });
+                res.status(200).json({
+                    message: 'Cập nhật mật khẩu thành công!',
+                    user: { userId: user._id, userName: user.userName, fullName: user.fullName }
+                });
+            } else {
+                res.status(400).json({ message: 'Mật khẩu cũ bị sai, hãy nhập lại!' });
             }
         } else {
             res.status(404).json({ message: 'Không tìm thấy người dùng!' });
