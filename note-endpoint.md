@@ -49,3 +49,9 @@
     - GET '/getCategories': Lấy danh sách các thể loại
         + 200: { message: 'Lấy danh sách các thể loại thành công!', categories}
         + 500: { message: 'Lỗi hệ thống máy chủ!' }
+    - GET '/getAuthors': Lấy danh sách các tác giả
+        + 200: { message: 'Lấy danh sách các tác giả thành công!', authors}
+        + 500: { message: 'Lỗi hệ thống máy chủ!' }
+    - GET '/getPublishers': Lấy danh sách các nhà xuất bản
+        + 200: { message: 'Lấy danh sách các nhà xuất bản thành công!', publishers}
+        + 500: { message: 'Lỗi hệ thống máy chủ!' }
