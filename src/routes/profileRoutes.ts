@@ -9,5 +9,3 @@ profileRouter.get('/getProfile', authenticate, getProfileUser);
 
 // Route sửa mật khẩu
 profileRouter.put('/changePassword', authenticate, changePassword);
-
-

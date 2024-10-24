@@ -5,6 +5,7 @@ import { CategoryModel } from "../models/CategoryModel.js";
 import { PublisherModel } from "../models/PublisherModel.js";
 import { AuthorModel } from "../models/AuthorModel.js";
 import { AuthorOnBookModel } from "../models/AuthorOnBookModel.js";
+import mongoose from "mongoose";
 
 const BOOKS_PER_PAGE = 16;
 
@@ -32,7 +33,7 @@ const getAllBooks = async (req: Request, res: Response) => {
 
 /**
  * @desc    Lấy danh sách các sách theo tên tìm kiếm
- * @route   GET '/books/getBooksByName'
+ * @route   POST '/books/getBooksByName'
  */
 const getBooksByName = async (req: Request, res: Response) => {
     try {
@@ -68,7 +69,7 @@ type SortedFields = {
 
 /**
  * @desc    Lấy danh sách các sách theo lọc, tìm kiếm, sắp xếp theo 1 tiêu chí (a-z, z-a, newest, oldest, bestseller)
- * @route   GET '/books/getFilteredBooks'
+ * @route   POST '/books/getFilteredBooks'
  */
 const getFilteredBooks = async (req: Request, res: Response) => {
     const { categoryNames, priceRange, sortByOrder, currentPage } = req.body;
@@ -148,9 +149,9 @@ const getFilteredBooks = async (req: Request, res: Response) => {
 
 type NewBookType = {
     title: string,
-    publisherName: string,
-    categoryNames: string[],
-    authorNames: string[],
+    publisherId: string,
+    categoryIds: string[],
+    authorIds: string[],
     discount: number,
     salePrice: number,
     quantity: number,
@@ -168,9 +169,9 @@ type NewBookType = {
 const insertNewBook = async (req: Request, res: Response) => {
     try {
         const bookInfo: NewBookType = req.body;
-        const publisherId = (await PublisherModel.findOne({ publisherName: bookInfo.publisherName }).exec())?._id;
-        const categoryIds = (await CategoryModel.find({ categoryName: { $in: bookInfo.categoryNames } }).exec()).map(category => category._id);
-        const authorIds = (await AuthorModel.find({ authorName: { $in: bookInfo.authorNames } }).exec()).map(author => author._id);
+        const publisherId = mongoose.Types.ObjectId.createFromHexString(bookInfo.publisherId);
+        const categoryIds = bookInfo.categoryIds.map(categoryId => mongoose.Types.ObjectId.createFromHexString(categoryId));
+        const authorIds = bookInfo.authorIds.map(authorId => mongoose.Types.ObjectId.createFromHexString(authorId));
         // Insert book into 'Books' collection
         const newBook = await BookModel.create({
             title: bookInfo.title,
@@ -205,7 +206,7 @@ const insertNewBook = async (req: Request, res: Response) => {
 
 /**
  * @desc    Lấy danh sách các thể loại
- * @route   POST '/books/getCategories'
+ * @route   GET '/books/getCategories'
  */
 const getCategories = async (req: Request, res: Response) => {
     try {
@@ -220,4 +221,46 @@ const getCategories = async (req: Request, res: Response) => {
     }
 }
 
-export { getAllBooks, getFilteredBooks, getBooksByName, insertNewBook, getCategories };
+/**
+ * @desc    Lấy danh sách các tác giả
+ * @route   GET '/books/getAuthors'
+ */
+const getAuthors = async (req: Request, res: Response) => {
+    try {
+        const authors = await AuthorModel.find().exec();
+        res.status(200).json({
+            message: 'Lấy danh sách các tác giả thành công!',
+            authors
+        })
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: 'Lỗi hệ thống máy chủ!' });
+    }
+}
+
+/**
+ * @desc    Lấy danh sách các nhà xuất bản
+ * @route   GET '/books/getPublishers'
+ */
+const getPublishers = async (req: Request, res: Response) => {
+    try {
+        const publishers = await PublisherModel.find().exec();
+        res.status(200).json({
+            message: 'Lấy danh sách các nhà xuất bản thành công!',
+            publishers
+        })
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: 'Lỗi hệ thống máy chủ!' });
+    }
+}
+
+export {
+    getAllBooks,
+    getFilteredBooks, 
+    getBooksByName, 
+    insertNewBook, 
+    getCategories, 
+    getAuthors,
+    getPublishers
+};
