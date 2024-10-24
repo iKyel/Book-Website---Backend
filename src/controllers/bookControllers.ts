@@ -14,11 +14,11 @@ const BOOKS_PER_PAGE = 16;
  * @route   GET '/books/getAllBooks'
  */
 const getAllBooks = async (req: Request, res: Response) => {
-    const { currentPage } = req.body;
+    const page = req.query.page || 1;
     try {
         const listBooks = await BookModel.find()
             .select(['title', 'salePrice', 'imageURL'])
-            .skip((currentPage - 1) * BOOKS_PER_PAGE)
+            .skip((Number(page) - 1) * BOOKS_PER_PAGE)
             .limit(BOOKS_PER_PAGE)
             .exec();
         res.status(200).json({
@@ -33,11 +33,13 @@ const getAllBooks = async (req: Request, res: Response) => {
 
 /**
  * @desc    Lấy danh sách các sách theo tên tìm kiếm
- * @route   POST '/books/getBooksByName'
+ * @route   GET '/books/getBooksByName'
  */
 const getBooksByName = async (req: Request, res: Response) => {
     try {
-        const { searchName, currentPage } = req.body;
+        // const { searchName, currentPage } = req.body;
+        const searchName = req.query.searchName || '';
+        const page = req.query.page || 1;
         const listBooks = await BookModel.find({
             title: {
                 $regex: searchName,
@@ -45,7 +47,7 @@ const getBooksByName = async (req: Request, res: Response) => {
             }
         })
             .select(['title', 'salePrice', 'imageURL'])
-            .skip((currentPage - 1) * BOOKS_PER_PAGE)
+            .skip((Number(page) - 1) * BOOKS_PER_PAGE)
             .limit(BOOKS_PER_PAGE)
             .exec();
         res.status(200).json({
@@ -64,7 +66,8 @@ type FilteredFields = {
 }
 type SortedFields = {
     title?: any,
-    createAt?: any
+    createAt?: any,
+    totalQuantitySold?: any
 }
 
 /**
@@ -72,27 +75,33 @@ type SortedFields = {
  * @route   POST '/books/getFilteredBooks'
  */
 const getFilteredBooks = async (req: Request, res: Response) => {
-    const { categoryNames, priceRange, sortByOrder, currentPage } = req.body;
+    // const { categoryNames, priceRange, sortByOrder, currentPage } = req.body;
+    const page = req.query.page || 1;
+    const sortBy = req.query.sortBy || 'a-z';
+    const types = req.query.types as string;
+    const priceRange = req.query.priceRange as string;
     let args: FilteredFields = {};
     try {
         // Lọc theo khoảng giá
         if (priceRange) {
-            const { minPrice, maxPrice } = priceRange;
+            const [minPrice, maxPrice] = priceRange.split(':');
             args.salePrice = {
                 $gte: Number(minPrice) || 0,
                 $lte: Number(maxPrice) || Number.MAX_VALUE,
             };
         }
-        // Lọc theo danh mục sách
-        if (categoryNames) {
-            const categories = await CategoryModel.findOne({ categoryNames }).exec();
-            const categoryOnBooks = await CategoryOnBookModel.find({ categoryId: categories?._id }).exec();
-            const bookIds = categoryOnBooks.map(item => item.bookId);
-            args._id = { $in: bookIds };
+        // Lọc sách theo các thể loại
+        if (types) {
+            const cateNames = types.split(',');
+            const categoryIds = (await CategoryModel.find({ categoryName: { $in: cateNames } })
+                .exec()).map(category => category._id);
+            const bookIdByCategories = (await CategoryOnBookModel.find({ categoryId: { $in: categoryIds } })
+                .exec()).map(item => item.bookId);
+            args._id = { $in: bookIdByCategories };
         }
         // Lọc theo tiêu chí sắp xếp
         let sortOption: SortedFields = {};
-        switch (sortByOrder) {
+        switch (sortBy) {
             case 'a-z':
                 sortOption.title = 1; break;
             case 'z-a':
@@ -101,40 +110,39 @@ const getFilteredBooks = async (req: Request, res: Response) => {
                 sortOption.createAt = -1; break;
             case 'oldest':
                 sortOption.createAt = 1; break;
+            case 'best-seller':
+                sortOption.totalQuantitySold = -1; break;
         }
-        // Lấy ds sách theo các tiêu chí trên
-        let listBooks = [];
-        if (sortByOrder !== 'best-seller') {
-            listBooks = await BookModel.find(args)
-                .select(['title', 'salePrice', 'imageURL'])
-                .sort(sortOption)
-                .skip((currentPage - 1) * BOOKS_PER_PAGE)
-                .limit(BOOKS_PER_PAGE)
-                .exec();
-        } else {
-            // Lấy ds sách sắp xếp theo best-seller
-            listBooks = await BookModel.aggregate()
-                .match(args)
-                .lookup({   // Join với 'OrderDetails' để lấy danh sách 'orders' có bookId = _id
-                    from: 'OrderDetails',
-                    localField: '_id',
-                    foreignField: 'bookId',
-                    as: 'orders'
-                })
+        // Xây dựng query chung
+        let query = BookModel.aggregate().match(args);
+        // Nếu là best-seller thì cần join với OrderDetails và tính tổng số lượng bán
+        if (sortBy === 'best-seller') {
+            query = query.lookup({
+                from: 'OrderDetails',
+                localField: '_id',
+                foreignField: 'bookId',
+                as: 'orders'
+            })
                 .addFields({
                     totalQuantitySold: { $sum: '$orders.quantity' }
-                })
-                .project({
-                    _id: 1,
-                    title: 1,
-                    salePrice: 1,
-                    imageURL: 1,
-                    totalQuantitySold: 1
-                })
-                .sort({ totalQuantitySold: -1 })
-                .skip((currentPage - 1) * BOOKS_PER_PAGE)
-                .limit(BOOKS_PER_PAGE)
-                .exec();
+                });
+        }
+        // Chọn các trường cần thiết và sắp xếp
+        query = query.sort(sortOption)
+            .project({
+                _id: 1,
+                title: 1,
+                salePrice: 1,
+                imageURL: 1,
+                createAt: 1,
+            })
+            .skip((Number(page) - 1) * BOOKS_PER_PAGE)
+            .limit(BOOKS_PER_PAGE);
+        // Thực thi query (Lấy danh sách các sách phù hợp với tiêu chí trên)
+        const listBooks = await query.exec();
+        if (listBooks.length === 0) {
+            res.status(404).json({ message: 'Không tìm thấy sách theo yêu cầu!' });
+            return;
         }
         res.status(200).json({
             message: 'Lấy danh sách các sách thành công!',
@@ -255,12 +263,151 @@ const getPublishers = async (req: Request, res: Response) => {
     }
 }
 
+/**
+ * @desc    Lấy chi tiết của sách
+ * @route   GET '/books/getDetailBook/:bookId'
+ */
+const getDetailBook = async (req: Request, res: Response) => {
+    const { bookId } = req.params;
+    const page = req.query.page || 1;
+    try {
+        // Lấy chi tiết của sách
+        const book = await BookModel.findById(bookId).exec();
+        if (!book) {
+            res.status(404).json({ message: 'Không tìm thấy cuốn sách này!' });
+            return;
+        }
+        const [authorOnBooks, categoryOnBooks, publisher] = await Promise.all([     // Lấy các authorId, categoryId và publisher theo bookId
+            AuthorOnBookModel.find({ bookId: book._id }).exec(),
+            CategoryOnBookModel.find({ bookId: book._id }).exec(),
+            PublisherModel.findById(book.publisherId).exec(),
+        ]);
+        const authorIds = authorOnBooks.map(item => item.authorId);
+        const categoryIds = categoryOnBooks.map(item => item.categoryId);
+        const [authors, categories] = await Promise.all([   // Lấy _id và tên của tác giả và thể loại
+            AuthorModel.find({ _id: { $in: authorIds } })
+                .select('authorName').exec(),
+            CategoryModel.find({ _id: { $in: categoryIds } }).exec(),
+        ]);
+        const detailBook = {
+            ...book.toObject(),
+            publisherName: publisher?.publisherName,
+            authors: authors,
+            categories: categories.map((category) => category.categoryName),
+        };
+        // Lấy danh sách các sách có cùng thể loại với sách trên
+        const bookIdByCategoris = (await CategoryOnBookModel.find({ categoryId: { $in: categoryIds } })
+            .exec()).map(item => item.bookId);
+        const listBooks = await BookModel.find({ _id: { $in: bookIdByCategoris } })
+            .select(['title', 'salePrice', 'imageURL'])
+            .skip((Number(page) - 1) * BOOKS_PER_PAGE)
+            .limit(BOOKS_PER_PAGE)
+            .exec();
+        res.status(200).json({ message: 'Lấy chi tiết cuốn sách thành công!', detailBook, listBooks });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Lỗi hệ thống máy chủ!' });
+    }
+}
+
+/**
+ * @desc    Lấy chi tiết tác giả
+ * @route   GET '/books/getDetailAuthor/:authorId'
+ */
+const getDetailAuthor = async (req: Request, res: Response) => {
+    const { authorId } = req.params;
+    const page = req.query.page || 1;
+    const sortBy = req.query.sortBy || 'a-z';
+    const types = req.query.types as string;
+    const priceRange = req.query.priceRange as string;
+    try {
+        // Lấy thông tin tác giả
+        const author = await AuthorModel.findById(authorId).exec();
+        if (!author) {
+            res.status(404).json({ message: 'Không tìm thấy tác giả này!' });
+            return;
+        }
+        // Lấy danh sách các sách liên quan đến tác giả
+        let args: FilteredFields = {};
+        // Lọc sách theo khoảng giá
+        if (priceRange) {
+            const [minPrice, maxPrice] = priceRange.split(':');
+            args.salePrice = {
+                $gte: Number(minPrice) || 0,
+                $lte: Number(maxPrice) || Number.MAX_VALUE,
+            };
+        }
+        // Lọc sách theo tác giả và các thể loại
+        const bookIdByAuthors = (await AuthorOnBookModel.find({ authorId: authorId })   // Lọc sách theo tác giả
+            .exec()).map(authorOnBook => authorOnBook.bookId.toString());
+        let bookIds;
+        if (types) {     // Lọc sách theo các thể loại
+            const cateNames = types.split(',');
+            const categoryIds = (await CategoryModel.find({ categoryName: { $in: cateNames } })
+                .exec()).map(category => category._id);
+            const bookIdByCategories = (await CategoryOnBookModel.find({ categoryId: { $in: categoryIds } })
+                .exec()).map(item => item.bookId);
+            bookIds = bookIdByCategories.filter(bookIdByCategory => bookIdByAuthors.includes(bookIdByCategory.toString()));   // Tìm các bookId vừa thuộc author và categories
+        } else {
+            bookIds = bookIdByAuthors.map(bookIdByAuthors => mongoose.Types.ObjectId.createFromHexString(bookIdByAuthors));
+        }
+        args._id = { $in: bookIds };
+        // Lọc sách theo tiêu chí sắp xếp
+        let sortOption: SortedFields = {};
+        switch (sortBy) {
+            case 'a-z':
+                sortOption.title = 1; break;
+            case 'z-a':
+                sortOption.title = -1; break;
+            case 'newest':
+                sortOption.createAt = -1; break;
+            case 'oldest':
+                sortOption.createAt = 1; break;
+            case 'best-seller':
+                sortOption.totalQuantitySold = -1; break;
+        }
+        let query = BookModel.aggregate().match(args);
+        if (sortBy === 'best-seller') {     // Nếu là 'best-seller' thì innerJoin với OrderDetails
+            query = query.lookup({
+                from: 'OrderDetails',
+                localField: '_id',
+                foreignField: 'bookId',
+                as: 'orders'
+            })
+                .addFields({
+                    totalQuantitySold: { $sum: '$orders.quantity' }
+                });
+        }
+        query = query.sort(sortOption)
+        .project({
+            _id: 1,
+            title: 1,
+            salePrice: 1,
+            imageURL: 1,
+            createAt: 1
+        })
+            .skip((Number(page) - 1) * BOOKS_PER_PAGE)
+            .limit(BOOKS_PER_PAGE);
+        const listBooks = await query.exec();
+        if (listBooks.length === 0) {
+            res.status(404).json({ message: 'Không có sách nào phù hợp!', author });
+            return;
+        }
+        res.status(200).json({ message: 'Lấy chi tiết tác giả thành công!', author, listBooks });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Lỗi hệ thống máy chủ!' });
+    }
+}
+
 export {
     getAllBooks,
-    getFilteredBooks, 
-    getBooksByName, 
-    insertNewBook, 
-    getCategories, 
+    getFilteredBooks,
+    getBooksByName,
+    insertNewBook,
+    getCategories,
     getAuthors,
-    getPublishers
+    getPublishers,
+    getDetailBook,
+    getDetailAuthor
 };
