@@ -269,7 +269,6 @@ const getPublishers = async (req: Request, res: Response) => {
  */
 const getDetailBook = async (req: Request, res: Response) => {
     const { bookId } = req.params;
-    const page = req.query.page || 1;
     try {
         // Lấy chi tiết của sách
         const book = await BookModel.findById(bookId).exec();
@@ -296,12 +295,11 @@ const getDetailBook = async (req: Request, res: Response) => {
             categories: categories.map((category) => category.categoryName),
         };
         // Lấy danh sách các sách có cùng thể loại với sách trên
-        const bookIdByCategoris = (await CategoryOnBookModel.find({ categoryId: { $in: categoryIds } })
+        const bookIdByCategories = (await CategoryOnBookModel.find({ categoryId: { $in: categoryIds } })
             .exec()).map(item => item.bookId);
-        const listBooks = await BookModel.find({ _id: { $in: bookIdByCategoris } })
+        const listBooks = await BookModel.find({ _id: { $in: bookIdByCategories } })
             .select(['title', 'salePrice', 'imageURL'])
-            .skip((Number(page) - 1) * BOOKS_PER_PAGE)
-            .limit(BOOKS_PER_PAGE)
+            .limit(3)
             .exec();
         res.status(200).json({ message: 'Lấy chi tiết cuốn sách thành công!', detailBook, listBooks });
     } catch (err) {
@@ -349,7 +347,7 @@ const getDetailAuthor = async (req: Request, res: Response) => {
                 .exec()).map(item => item.bookId);
             bookIds = bookIdByCategories.filter(bookIdByCategory => bookIdByAuthors.includes(bookIdByCategory.toString()));   // Tìm các bookId vừa thuộc author và categories
         } else {
-            bookIds = bookIdByAuthors.map(bookIdByAuthors => mongoose.Types.ObjectId.createFromHexString(bookIdByAuthors));
+            bookIds = bookIdByAuthors.map(bookIdByAuthor => mongoose.Types.ObjectId.createFromHexString(bookIdByAuthor));
         }
         args._id = { $in: bookIds };
         // Lọc sách theo tiêu chí sắp xếp
