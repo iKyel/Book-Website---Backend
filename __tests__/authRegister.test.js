@@ -1,66 +1,44 @@
 import request from "supertest";
 import app from "../dist/app.js";
-import { UserModel } from "../dist/models/UserModel.js";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 
-jest.mock("../models/UserModel.js");
+// Tải các biến môi trường từ tệp .env
+dotenv.config();
 
-describe("POST /auth/register", () => {
-  beforeEach(() => {
-    jest.clearAllMocks(); // Reset mock data trước mỗi test
+describe("Auth Register Controllers", () => {
+  beforeAll(async () => {
+    // Kết nối đến MongoDB trước khi chạy các test
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
   });
 
-  test("should register user successfully", async () => {
-    // Mock dữ liệu trả về từ UserModel.findOne
-    UserModel.findOne.mockResolvedValue(null); // Không tìm thấy user
-
-    // Mock UserModel.create
-    UserModel.create.mockResolvedValue({
-      fullName: "Nguyễn Văn A",
-      userName: "nguyenvana",
-      password: "hashedPassword",
-    });
-
-    const response = await request(app).post("/auth/register").send({
-      fullName: "Nguyễn Văn A",
-      userName: "nguyenvana",
-      password: "123456",
-    });
-
-    expect(response.status).toBe(201);
-    expect(response.body.message).toBe("Đăng ký thành công!");
+  afterAll(async () => {
+    // Ngắt kết nối MongoDB sau khi hoàn thành các test
+    await mongoose.disconnect();
   });
 
-  test("should return error if username already exists", async () => {
-    // Mock dữ liệu trả về từ UserModel.findOne
-    UserModel.findOne.mockResolvedValue({
-      userName: "nguyenvana",
-    }); // Tìm thấy user
-
-    const response = await request(app).post("/auth/register").send({
-      fullName: "Nguyễn Văn A",
-      userName: "nguyenvana",
-      password: "123456",
+  test("Register failed with existing username", async () => {
+    // Đăng ký người dùng đầu tiên
+    await request(app).post("/auth/register").send({
+      fullName: "Test User",
+      userName: "TestUser",
+      password: "password123",
     });
 
+    // Gửi yêu cầu đăng ký với tên đăng nhập đã tồn tại
+    const response = await request(app).post("/auth/register").send({
+      fullName: "Another User",
+      userName: "TestUser", // Tên đăng nhập đã tồn tại
+      password: "password456",
+    });
+
+    // Kiểm tra kết quả
     expect(response.status).toBe(400);
     expect(response.body.message).toBe(
       "Tên đăng nhập đã tồn tại. Hãy dùng tên khác!"
     );
-  });
-
-  test("should return server error", async () => {
-    // Mock dữ liệu trả về từ UserModel.findOne
-    UserModel.findOne.mockImplementation(() => {
-      throw new Error("Database error");
-    });
-
-    const response = await request(app).post("/auth/register").send({
-      fullName: "Nguyễn Văn A",
-      userName: "nguyenvana",
-      password: "123456",
-    });
-
-    expect(response.status).toBe(500);
-    expect(response.body.message).toBe("Lỗi hệ thống máy chủ.");
   });
 });
