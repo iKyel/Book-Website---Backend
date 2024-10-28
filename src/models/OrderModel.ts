@@ -22,11 +22,9 @@ const OrderSchema = new mongoose.Schema(
         },
         phoneNumber: {
             type: String,
-            required: true
         },
         address: {
             type: String,
-            required: true
         }
     },
     {
