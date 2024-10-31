@@ -1,19 +1,19 @@
-import mongoose from "mongoose";
+// import mongoose from "mongoose";
 
-const CartSchema = new mongoose.Schema(
-    {
-        userId: {
-            type: mongoose.Types.ObjectId,
-            required: true
-        },
-        totalPrice: {
-            type: Number,
-            default: 0
-        }
-    },
-    {
-        timestamps: true
-    }
-);
+// const CartSchema = new mongoose.Schema(
+//     {
+//         userId: {
+//             type: mongoose.Types.ObjectId,
+//             required: true
+//         },
+//         totalPrice: {
+//             type: Number,
+//             default: 0
+//         }
+//     },
+//     {
+//         timestamps: true
+//     }
+// );
 
-export const CartModel = mongoose.model('cart', CartSchema, 'Carts');
+// export const CartModel = mongoose.model('cart', CartSchema, 'Carts');
