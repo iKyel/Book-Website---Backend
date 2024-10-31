@@ -55,3 +55,29 @@
     - GET '/getPublishers': Lấy danh sách các nhà xuất bản
         + 200: { message: 'Lấy danh sách các nhà xuất bản thành công!', publishers}
         + 500: { message: 'Lỗi hệ thống máy chủ!' }
+    - GET '/getDetailBook/:bookId': Lấy chi tiết của sách và các sách liên quan
+        + 200: { message: 'Lấy chi tiết cuốn sách thành công!', detailBook, listBooks }
+        + 404: { message: 'Không tìm thấy cuốn sách này!' }
+        + 500: { message: 'Lỗi hệ thống máy chủ!' }
+    - GET '/getDetailAuthor/:authorId': Lấy chi tiết tác giả và các sách liên quan
+        + 200: { message: 'Lấy chi tiết tác giả thành công!', author, listBooks }
+        + 404: { message: 'Không tìm thấy tác giả này!' }
+        + 404: { message: 'Không có sách nào phù hợp!', author }
+        + 500: { message: 'Lỗi hệ thống máy chủ!' }
+
+/----------------------------------------------------/
+
+* '/order': Các chức năng liên quan đến đơn đặt và giỏ hàng
+    - POST '/addCart':
+        + 200: { message: "Thêm sách vào giỏ hàng thành công!" }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
+    - GET '/getCart':
+        + 200: { message: "Lấy giỏ hàng thành công!", order: cart, orderDetails: cartDetails }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
+    - PUT '/updateCart':
+        + 200: { message: "Cập nhật sách trong giỏ hàng thành công!", order: updatedCart, orderDetails: cartDetails }
+        + 400: { message: "Số lượng sách thêm không đủ. Hãy giảm bớt!" }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
+    - DELETE '/deleteCart/:orderDetailId':
+        + 200: { message: "Xóa sách trong giỏ hàng thành công!", order: updatedCart, orderDetails: cartDetails }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }

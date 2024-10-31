@@ -4,6 +4,8 @@ import {
     getAuthors,
     getBooksByName,
     getCategories,
+    getDetailAuthor,
+    getDetailBook,
     getFilteredBooks,
     getPublishers,
     insertNewBook
@@ -15,10 +17,10 @@ const bookRouter = express.Router();
 bookRouter.get('/getBooks', getAllBooks);
 
 // Lấy danh sách các sách theo lọc, sắp xếp theo 1 tiêu chí (a-z, z-a, newest, oldest, bestseller)
-bookRouter.post('/getFilteredBooks', getFilteredBooks);
+bookRouter.get('/getFilteredBooks', getFilteredBooks);
 
 // Lấy danh sách các sách theo tên tìm kiếm
-bookRouter.post('/getBooksByName', getBooksByName);
+bookRouter.get('/getBooksByName', getBooksByName);
 
 // Thêm sách vào csdl
 bookRouter.post('/createBook', insertNewBook);
@@ -31,5 +33,11 @@ bookRouter.get('/getAuthors', getAuthors);
 
 // Lấy danh sách nhà xuất bản
 bookRouter.get('/getPublishers', getPublishers);
+
+// Lấy chi tiết sách theo bookId
+bookRouter.get('/getDetailBook/:bookId', getDetailBook);
+
+// Lấy chi tiết tác giả theo authorId
+bookRouter.get('/getDetailAuthor/:authorId', getDetailAuthor);
 
 export { bookRouter };
