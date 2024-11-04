@@ -1,79 +1,47 @@
-import request from "supertest";
-import app from "../dist/app.js";
-
-import mongoose from "mongoose";
+import { getProfileUser } from "../dist/controllers/profileControllers.js";
 import { UserModel } from "../dist/models/UserModel.js";
-import dotenv from "dotenv";
-import bcrypt from "bcrypt";
 
-dotenv.config();
+// Mock the UserModel
+jest.mock("../dist/models/UserModel.js", () => ({
+  findOne: jest.fn(),
+}));
 
-let createdUserId;
-let authToken;
+// Mock request và response
+const mockRequest = {
+  user: { _id: "123", userName: "testuser", fullName: "Test User" }, // Mocked user data
+};
 
-// Đăng ký người dùng trước khi chạy các bài kiểm tra
-beforeAll(async () => {
-  const newUser = {
-    fullName: "Nguyễn Văn A",
-    userName: "existingUser", // Đảm bảo tên người dùng đã tồn tại
-    password: "password123",
-  };
+const mockResponse = {
+  status: jest.fn(() => mockResponse),
+  json: jest.fn(),
+};
 
-  const hashedPassword = await bcrypt.hash(newUser.password, 10);
-  const user = await UserModel.create({
-    ...newUser,
-    password: hashedPassword,
+describe("getProfileUser", () => {
+  it("should return user profile successfully", async () => {
+    await getProfileUser(mockRequest, mockResponse);
+
+    // Kiểm tra status code trả về
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+
+    // Kiểm tra dữ liệu trả về từ API
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      message: "Lấy thông tin người dùng thành công!",
+      user: { userId: "123", userName: "testuser", fullName: "Test User" },
+    });
   });
 
-  createdUserId = user._id;
+  it("should return 404 if no user found", async () => {
+    const mockReqWithoutUser = {
+      user: null,
+    };
+    await getProfileUser(mockReqWithoutUser, mockResponse);
 
-  // Đăng nhập để lấy token
-  const loginResponse = await request(app)
-    .post("/auth/login")
-    .send({ userName: newUser.userName, password: newUser.password });
+    // Kiểm tra status code trả về khi không có người dùng
+    expect(mockResponse.status).toHaveBeenCalledWith(404);
 
-  authToken = loginResponse.body.token; // Giả sử bạn trả về token sau khi đăng nhập
-});
-
-// Xóa tài khoản người dùng đã tạo trong test
-afterAll(async () => {
-  if (createdUserId) {
-    await UserModel.findByIdAndDelete(createdUserId);
-  }
-  await mongoose.connection.close();
-});
-
-describe("Profile Router", () => {
-  describe("POST /profile/getProfile", () => {
-    it("should return user profile successfully if user exists", async () => {
-      const response = await request(app)
-        .post("/profile/getProfile")
-        .set("Authorization", `Bearer ${authToken}`) // Thêm token vào header
-        .send({ userName: "existingUser" });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.body.message).toBe("Success");
-      expect(response.body.user).toBeDefined(); // Kiểm tra thông tin người dùng được trả về
-    });
-
-    it("should return failure if user does not exist", async () => {
-      const response = await request(app)
-        .post("/profile/getProfile")
-        .set("Authorization", `Bearer ${authToken}`) // Thêm token vào header
-        .send({ userName: "nonexistentUser" });
-
-      expect(response.statusCode).toBe(400);
-      expect(response.body.message).toBe("Failure");
-    });
-
-    it("should handle server errors gracefully", async () => {
-      const response = await request(app)
-        .post("/profile/getProfile")
-        .set("Authorization", `Bearer ${authToken}`) // Thêm token vào header
-        .send({ userName: null }); // Trường hợp không hợp lệ có thể gây lỗi server
-
-      expect(response.statusCode).toBe(500);
-      expect(response.body.error).toBeDefined(); // Kiểm tra xem có thông báo lỗi không
+    // Kiểm tra thông báo lỗi trả về từ API
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      message: "Không tìm thấy người dùng!",
     });
   });
 });
