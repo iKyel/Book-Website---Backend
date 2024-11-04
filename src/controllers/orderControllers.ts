@@ -10,7 +10,7 @@ import { BookModel } from "../models/BookModel.js";
  * @route   POST '/order/addCart';
  */
 const addBookToCart = async (req: AuthenticatedRequest, res: Response) => {
-    const { bookId, soLgSachThem, price } = req.body;
+    const { bookId, soLgSachThem, price, soLgTonKho } = req.body;
     const userId = req.user?._id;
     try {
         // Lấy giỏ hàng của user
@@ -20,6 +20,10 @@ const addBookToCart = async (req: AuthenticatedRequest, res: Response) => {
         if (existCartDetail) {      // Nếu đã có, cập nhật số lượng sách và thành tiền
             existCartDetail.quantity += soLgSachThem;
             existCartDetail.price += price;
+            if (existCartDetail.quantity > soLgTonKho) {    // Ktra số lượng sách thêm
+                res.status(400).json({ message: `Sách này còn ${soLgTonKho}. Hãy giảm bớt!` });
+                return;
+            }
             await existCartDetail.save();
         } else {        // Nếu chưa có, thêm sách mới vào giỏ hàng
             await OrderDetailModel.create({ orderId: cart._id, bookId, quantity: soLgSachThem, price });
