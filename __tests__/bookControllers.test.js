@@ -3,11 +3,11 @@ import {
   getBooksByName,
   insertNewBook,
   getCategories,
-} from "../dist/controllers/bookControllers";
-import { BookModel } from "../dist/models/BookModel";
-import { CategoryModel } from "../dist/models/CategoryModel";
-import { AuthorOnBookModel } from "../dist/models/AuthorOnBookModel";
-import { CategoryOnBookModel } from "../dist/models/CategoryOnBookModel";
+} from "../dist/controllers/bookControllers.js";
+import { BookModel } from "../dist/models/BookModel.js";
+import { CategoryModel } from "../dist/models/CategoryModel.js";
+import { AuthorOnBookModel } from "../dist/models/AuthorOnBookModel.js";
+import { CategoryOnBookModel } from "../dist/models/CategoryOnBookModel.js";
 import mongoose from "mongoose";
 
 // Mock các phương thức của Mongoose
