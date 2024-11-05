@@ -1,5 +1,4 @@
 import { getProfileUser } from "../dist/controllers/profileControllers.js";
-import { UserModel } from "../dist/models/UserModel.js";
 
 // Mock the UserModel
 jest.mock("../dist/models/UserModel.js", () => ({
