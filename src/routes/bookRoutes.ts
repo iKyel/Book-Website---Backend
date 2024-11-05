@@ -1,9 +1,11 @@
 import express from "express";
 import {
     getAllBooks,
+    getAuthors,
     getBooksByName,
     getCategories,
     getFilteredBooks,
+    getPublishers,
     insertNewBook
 } from "../controllers/bookControllers.js";
 
@@ -22,6 +24,12 @@ bookRouter.post('/getBooksByName', getBooksByName);
 bookRouter.post('/createBook', insertNewBook);
 
 // Lấy danh sách thể loại
-bookRouter.post('/getCategories', getCategories);
+bookRouter.get('/getCategories', getCategories);
+
+// Lấy danh sách tác giả
+bookRouter.get('/getAuthors', getAuthors);
+
+// Lấy danh sách nhà xuất bản
+bookRouter.get('/getPublishers', getPublishers);
 
 export { bookRouter };
