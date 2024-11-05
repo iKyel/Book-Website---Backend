@@ -11,10 +11,10 @@ import { CategoryOnBookModel } from "../dist/models/CategoryOnBookModel.js";
 import mongoose from "mongoose";
 
 // Mock các phương thức của Mongoose
-jest.mock("../dist/models/BookModel.js");
-jest.mock("../dist/models/CategoryModel.js");
-jest.mock("../dist/models/AuthorOnBookModel.js");
-jest.mock("../dist/models/CategoryOnBookModel.js");
+jest.mock("../dist/models/BookModel");
+jest.mock("../dist/models/CategoryModel");
+jest.mock("../dist/models/AuthorOnBookModel");
+jest.mock("../dist/models/CategoryOnBookModel");
 
 // Mock response và request của Express
 const mockRequest = (body = {}) => ({
