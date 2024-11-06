@@ -1,46 +1,42 @@
+import request from "supertest";
+import app from "../dist/app.js";
 import { AuthorModel } from "../dist/models/AuthorModel.js";
 import { getAuthors } from "../dist/controllers/bookControllers.js";
 
-// Mock các phương thức của AuthorModel
-jest.mock("../dist/models/AuthorModel", () => ({
-  find: jest.fn(),
+// Mock mô-đun AuthorModel để tránh gọi thật vào cơ sở dữ liệu
+jest.mock("../dist/models/AuthorModel.js", () => ({
+  AuthorModel: {
+    find: jest.fn(),
+  },
 }));
 
-describe("Test author details", () => {
-  let mockReq, mockRes, mockNext;
-
+describe("GET /books/getAuthors", () => {
   beforeEach(() => {
-    mockReq = {};
-    mockRes = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
-    };
-    mockNext = jest.fn();
+    jest.clearAllMocks(); // Dọn dẹp mock trước mỗi test
   });
 
-  it("should return the list of authors successfully", async () => {
-    const authors = [{ name: "Tác giả 1" }, { name: "Tác giả 2" }];
-    AuthorModel.find.mockResolvedValue(authors);
+  it("should return a list of authors and a success message", async () => {
+    const mockAuthors = [
+      { _id: "author1", authorName: "Author 1", description: "Description 1" },
+      { _id: "author2", authorName: "Author 2", description: "Description 2" },
+    ];
 
-    await getAuthors(mockReq, mockRes, mockNext);
+    // Mock phương thức find của AuthorModel trả về dữ liệu mockAuthors
+    AuthorModel.find.mockResolvedValue(mockAuthors);
 
-    expect(AuthorModel.find).toHaveBeenCalled();
-    expect(mockRes.status).toHaveBeenCalledWith(200);
-    expect(mockRes.json).toHaveBeenCalledWith({
-      message: "Lấy danh sách các tác giả thành công!",
-      authors,
-    });
+    const response = await request(app).get("/books/getAuthors").expect(200);
+
+    expect(response.body.message).toBe("Lấy danh sách các tác giả thành công!");
+    expect(response.body.authors).toEqual(mockAuthors);
+    expect(response.body.authors.length).toBe(2);
   });
 
-  it("should return an error when the author list cannot be retrieved", async () => {
-    const errorMessage = "Lỗi hệ thống máy chủ!";
-    AuthorModel.find.mockRejectedValue(new Error(errorMessage));
+  it("should return 500 if there is a server error", async () => {
+    // Mock phương thức find gặp lỗi
+    AuthorModel.find.mockRejectedValue(new Error("Server Error"));
 
-    await getAuthors(mockReq, mockRes, mockNext);
+    const response = await request(app).get("/books/getAuthors").expect(500);
 
-    expect(mockRes.status).toHaveBeenCalledWith(500);
-    expect(mockRes.json).toHaveBeenCalledWith({
-      message: errorMessage,
-    });
+    expect(response.body.message).toBe("Lỗi hệ thống máy chủ!");
   });
 });
