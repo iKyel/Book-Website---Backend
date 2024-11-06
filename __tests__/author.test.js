@@ -1,42 +1,124 @@
-import request from "supertest";
-import app from "../dist/app.js";
-import { AuthorModel } from "../dist/models/AuthorModel.js";
-import { getAuthors } from "../dist/controllers/bookControllers.js";
+import {
+  getAllBooks,
+  getFilteredBooks,
+  getBooksByName,
+  insertNewBook,
+  getCategories,
+  getAuthors,
+  getPublishers,
+} from "../dist/controllers/bookControllers";
+import { BookModel } from "../dist/models/BookModel";
+import { CategoryModel } from "../dist/models/CategoryModel";
+import { AuthorOnBookModel } from "../dist/models/AuthorOnBookModel";
+import { CategoryOnBookModel } from "../dist/models/CategoryOnBookModel";
+import { PublisherModel } from "../dist/models/PublisherModel";
+import { AuthorModel } from "../dist/models/AuthorModel";
+import mongoose from "mongoose";
 
-// Mock mô-đun AuthorModel để tránh gọi thật vào cơ sở dữ liệu
-jest.mock("../dist/models/AuthorModel.js", () => ({
+jest.mock("../dist/models/AuthorModel", () => ({
   AuthorModel: {
     find: jest.fn(),
   },
 }));
+jest.mock("../dist/models/PublisherModel", () => ({
+  PublisherModel: {
+    find: jest.fn(),
+  },
+}));
 
-describe("GET /books/getAuthors", () => {
-  beforeEach(() => {
-    jest.clearAllMocks(); // Dọn dẹp mock trước mỗi test
+// Mock response và request của Express
+const mockRequest = (body = {}) => ({
+  body,
+});
+
+const mockResponse = () => {
+  const res = {};
+  res.status = jest.fn().mockReturnValue(res);
+  res.json = jest.fn().mockReturnValue(res);
+  return res;
+};
+
+describe("Book Controllers", () => {
+  afterEach(() => {
+    jest.clearAllMocks(); // Clear mock calls giữa các tests
   });
 
-  it("should return a list of authors and a success message", async () => {
-    const mockAuthors = [
-      { _id: "author1", authorName: "Author 1", description: "Description 1" },
-      { _id: "author2", authorName: "Author 2", description: "Description 2" },
+describe("getAuthors", () => {
+  it("should return list of authors", async () => {
+    const req = mockRequest();
+    const res = mockResponse();
+    const authors = [
+      { name: "Author 1", bio: "Bio 1", imageURL: "author1.jpg" },
     ];
 
-    // Mock phương thức find của AuthorModel trả về dữ liệu mockAuthors
-    AuthorModel.find.mockResolvedValue(mockAuthors);
+    AuthorModel.find.mockReturnValueOnce({
+      select: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValueOnce(authors),
+    });
 
-    const response = await request(app).get("/books/getAuthors").expect(200);
+    await getAuthors(req, res);
 
-    expect(response.body.message).toBe("Lấy danh sách các tác giả thành công!");
-    expect(response.body.authors).toEqual(mockAuthors);
-    expect(response.body.authors.length).toBe(2);
+    expect(AuthorModel.find).toHaveBeenCalledTimes(1);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Lấy danh sách các tác giả thành công!", // Change here
+      authors,
+    });
   });
 
-  it("should return 500 if there is a server error", async () => {
-    // Mock phương thức find gặp lỗi
-    AuthorModel.find.mockRejectedValue(new Error("Server Error"));
+  it("should return 500 error on failure", async () => {
+    const req = mockRequest();
+    const res = mockResponse();
 
-    const response = await request(app).get("/books/getAuthors").expect(500);
+    AuthorModel.find.mockReturnValueOnce({
+      exec: jest.fn().mockRejectedValueOnce(new Error("Server Error")),
+    });
 
-    expect(response.body.message).toBe("Lỗi hệ thống máy chủ!");
+    await getAuthors(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Lỗi hệ thống máy chủ!",
+    });
+  });
+});
+
+describe("getPublishers", () => {
+  it("should return list of publishers", async () => {
+    const req = mockRequest();
+    const res = mockResponse();
+    const publishers = [
+      { name: "Publisher 1", address: "Address 1", contactInfo: "Contact 1" },
+    ];
+
+    PublisherModel.find.mockReturnValueOnce({
+      select: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValueOnce(publishers),
+    });
+
+    await getPublishers(req, res);
+
+    expect(PublisherModel.find).toHaveBeenCalledTimes(1);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Lấy danh sách các nhà xuất bản thành công!", // Change here
+      publishers,
+    });
+  });
+
+  it("should return 500 error on failure", async () => {
+    const req = mockRequest();
+    const res = mockResponse();
+
+    PublisherModel.find.mockReturnValueOnce({
+      exec: jest.fn().mockRejectedValueOnce(new Error("Server Error")),
+    });
+
+    await getPublishers(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Lỗi hệ thống máy chủ!",
+    });
   });
 });
