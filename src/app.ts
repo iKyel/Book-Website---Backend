@@ -7,6 +7,7 @@ import 'dotenv/config';
 import { profileRouter } from "./routes/profileRoutes.js";
 import { authRouter } from "./routes/authRoutes.js";
 import { bookRouter } from "./routes/bookRoutes.js";
+import { orderRouter } from "./routes/orderRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -36,18 +37,18 @@ app.use('/auth', authRouter);
 
 // Routes for books
 app.use('/books', bookRouter);
-// Tạo hàm async để kết nối DB
-const startServer = async () => {
-    // Connect to db and load server if success
-    try {
-        await mongoose.connect(MONGODB_URI);
-        console.log('App connected to database');
-        app.listen(PORT, () => {  // open server at port '8000'
-            console.log(`App is listening to port: http://localhost:${PORT}`);
-        });
-    } catch (error) {
-        console.log(error);
-    }
-};
-startServer();
+
+// Route for order
+app.use('/order', orderRouter);
+
+// Connect to db and load server if success
+try {
+    await mongoose.connect(MONGODB_URI);
+    console.log('App connected to database');
+    app.listen(PORT, () => {    // open server at port '8000'
+        console.log(`App is listening to port: http://localhost:${PORT}`);
+    })
+} catch (error) {
+    console.log(error);
+}
 export default app;
