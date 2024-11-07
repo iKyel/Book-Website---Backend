@@ -81,3 +81,11 @@
     - DELETE '/deleteCart/:orderDetailId':
         + 200: { message: "Xóa sách trong giỏ hàng thành công!", order: updatedCart, orderDetails: cartDetails }
         + 500: { message: "Lỗi máy chủ hệ thống!" }
+    - GET '/order/checkQuantityBook':
+        + 200: { message: "Cho phép thanh toán!" }
+        + 400: { message: 'Sách '${invalidBook.title}' còn ${invalidBook.quantity} quyển. Hãy chỉnh lại số lượng trong giỏ!' }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
+    - PUT '/order/completeOrder':
+        + 200: { message: "Đặt hàng thành công!", order: updatedOrder }
+        + 400: { message: "Hãy điền đầy đủ số điện thoại và địa chỉ nhận hàng!" }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
