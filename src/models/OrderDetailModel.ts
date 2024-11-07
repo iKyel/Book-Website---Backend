@@ -1,5 +1,13 @@
 import mongoose from "mongoose";
 
+export type OrderDetailType = {
+    _id: mongoose.Types.ObjectId,
+    orderId: mongoose.Types.ObjectId,
+    bookId: mongoose.Types.ObjectId,
+    quantity: number,
+    price: number   // Thành tiền
+}
+
 const OrderDetailSchema = new mongoose.Schema(
     {
         orderId: {
