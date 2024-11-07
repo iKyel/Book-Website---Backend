@@ -18,8 +18,8 @@ const addBookToCart = async (req: AuthenticatedRequest, res: Response) => {
         // Kiểm tra xem bookId đã tồn tại trong giỏ hàng chưa?
         const existCartDetail = await OrderDetailModel.findOne({ orderId: cart._id, bookId }).exec();
         if (existCartDetail) {      // Nếu đã có, cập nhật số lượng sách và thành tiền
-            existCartDetail.quantity += soLgSachThem;
-            existCartDetail.price += price;
+            existCartDetail.quantity += Number(soLgSachThem);
+            existCartDetail.price += Number(price);
             if (existCartDetail.quantity > soLgTonKho) {    // Ktra số lượng sách thêm
                 res.status(400).json({ message: `Sách này còn ${soLgTonKho}. Hãy giảm bớt!` });
                 return;
