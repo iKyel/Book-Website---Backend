@@ -222,14 +222,11 @@ describe("getAuthors", () => {
     const authors = [
       { name: "Author 1", bio: "Bio 1", imageURL: "author1.jpg" },
     ];
-
     AuthorModel.find.mockReturnValueOnce({
       select: jest.fn().mockReturnThis(),
       exec: jest.fn().mockResolvedValueOnce(authors),
     });
-
     await getAuthors(req, res);
-
     expect(AuthorModel.find).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -241,13 +238,10 @@ describe("getAuthors", () => {
   it("should return 500 error on failure", async () => {
     const req = mockRequest();
     const res = mockResponse();
-
     AuthorModel.find.mockReturnValueOnce({
       exec: jest.fn().mockRejectedValueOnce(new Error("Server Error")),
     });
-
     await getAuthors(req, res);
-
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       message: "Lỗi hệ thống máy chủ!",
