@@ -25,7 +25,7 @@ const BookSchema = new mongoose.Schema({
         required: true
     },
     size: {
-        type: (Array),
+        type: String,
         required: true
     },
     coverForm: {

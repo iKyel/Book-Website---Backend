@@ -79,7 +79,7 @@ const updateCart = async (req, res) => {
             const newQuantity = orderDetail.quantity;
             const book = await BookModel.findById(orderDetail.bookId).exec();
             if (!book || newQuantity > book.quantity) {
-                res.status(400).json({ message: "Số lượng sách thêm không đủ. Hãy giảm bớt!" });
+                res.status(400).json({ message: `Sách '${book?.title}' còn ${book?.quantity}. Hãy giảm bớt!` });
                 return;
             }
             // Thêm lệnh update vào bulk
@@ -196,7 +196,7 @@ const checkQuantityBook = async (req, res) => {
 };
 /**
  * @desc    Tạo đơn đặt hàng khi người dùng ấn 'Hoàn tất đơn hàng'
- * @route   PUT '/order/completeOrder'
+ * @route   PUT '/order/createOrder'
  */
 const createOrder = async (req, res) => {
     const { order } = req.body;
@@ -206,14 +206,37 @@ const createOrder = async (req, res) => {
             res.status(400).json({ message: "Hãy điền đầy đủ số điện thoại và địa chỉ nhận hàng!" });
             return;
         }
+        //------------------------------------------------------
+        // Cập nhật lại số lượng sách tồn kho sau khi mua
+        const orderDetails = await OrderDetailModel.find({ orderId: order.id }).exec();
+        const bulkUpdates = [];
+        for (const orderDetail of orderDetails) {
+            const quantityAdded = orderDetail.quantity;
+            const book = await BookModel.findById(orderDetail.bookId).exec();
+            // Thêm lệnh update vào bulk
+            bulkUpdates.push({
+                updateOne: {
+                    filter: { _id: orderDetail.bookId },
+                    update: {
+                        quantity: book?.quantity - quantityAdded, // Cập nhật lại số lượng trong kho
+                    }
+                }
+            });
+        }
+        await BookModel.bulkWrite(bulkUpdates);
+        //------------------------------------------------------
         // Cập nhật orderStatus từ 'Cart' -> 'Order'
-        const updatedOrder = await OrderModel.findByIdAndUpdate(order._id, {
+        const updatedOrder = await OrderModel.findByIdAndUpdate(order.id, {
             orderStatus: 'Order',
             paymentType: order.paymentType,
             phoneNumber: order.phoneNumber,
             address: order.address
         }, { new: true })
             .exec();
+        if (!updatedOrder) {
+            res.status(400).json({ message: "Tạo đơn hàng không thành công!" });
+            return;
+        }
         res.status(200).json({
             message: "Đặt hàng thành công!",
             order: updatedOrder
@@ -270,7 +293,7 @@ const getOrderDetails = async (req, res) => {
         const orderDetails = await OrderDetailModel.find({ orderId })
             .populate({
             path: 'bookId',
-            select: '_id title salePrice',
+            select: '_id title salePrice imageURL',
             model: 'book'
         })
             .exec();
