@@ -37,7 +37,6 @@ describe("Auth Controllers", () => {
         password: "password456",
       });
 
-      // Kiểm tra kết quả
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         "Tên đăng nhập đã tồn tại. Hãy dùng tên khác!"
