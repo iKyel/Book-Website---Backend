@@ -1,15 +1,12 @@
-import { Response } from "express";
-import { AuthenticatedRequest } from "../middlewares/authenticateToken.js";
 import { OrderModel } from "../models/OrderModel.js";
-import { OrderDetailModel, OrderDetailType } from "../models/OrderDetailModel.js";
+import { OrderDetailModel } from "../models/OrderDetailModel.js";
 import { getUserCart } from "../utils/checkUserHasCart.js";
 import { BookModel } from "../models/BookModel.js";
-
 /**
  * @desc    Thêm sách vào giỏ hàng
  * @route   POST '/order/addCart';
  */
-const addBookToCart = async (req: AuthenticatedRequest, res: Response) => {
+const addBookToCart = async (req, res) => {
     const { bookId, soLgSachThem, price, soLgTonKho } = req.body;
     const userId = req.user?._id;
     try {
@@ -17,37 +14,35 @@ const addBookToCart = async (req: AuthenticatedRequest, res: Response) => {
         const cart = await getUserCart(userId);
         // Kiểm tra xem bookId đã tồn tại trong giỏ hàng chưa?
         const existCartDetail = await OrderDetailModel.findOne({ orderId: cart._id, bookId }).exec();
-        if (existCartDetail) {      // Nếu đã có, cập nhật số lượng sách và thành tiền
+        if (existCartDetail) { // Nếu đã có, cập nhật số lượng sách và thành tiền
             existCartDetail.quantity += soLgSachThem;
             existCartDetail.price += price;
-            if (existCartDetail.quantity > soLgTonKho) {    // Ktra tổng số lượng sách thêm trong giỏ
+            if (existCartDetail.quantity > soLgTonKho) { // Ktra tổng số lượng sách thêm trong giỏ
                 res.status(400).json({ message: `Sách này còn ${soLgTonKho}. Hãy giảm bớt!` });
                 return;
             }
             await existCartDetail.save();
-        } else {        // Nếu chưa có, thêm sách mới vào giỏ hàng
+        }
+        else { // Nếu chưa có, thêm sách mới vào giỏ hàng
             await OrderDetailModel.create({ orderId: cart._id, bookId, quantity: soLgSachThem, price });
         }
         // Tính tổng giá từ tất cả các orderDetails trong giỏ hàng
         const totalPrice = (await OrderDetailModel.find({ orderId: cart._id }).exec())
             .reduce((acc, item) => acc + item.price, 0);
         // Cập nhật tổng tiền trong Order
-        await OrderModel.findOneAndUpdate(
-            { _id: cart._id },
-            { totalPrice: totalPrice },
-        ).exec();
+        await OrderModel.findOneAndUpdate({ _id: cart._id }, { totalPrice: totalPrice }).exec();
         res.status(200).json({ message: "Thêm sách vào giỏ hàng thành công!" });
-    } catch (err) {
+    }
+    catch (err) {
         console.log(err);
         res.status(500).json({ message: "Lỗi máy chủ hệ thống!" });
     }
 };
-
 /**
  * @desc    Lấy giỏ hàng
  * @route   GET '/order/getCart'
  */
-const getCart = async (req: AuthenticatedRequest, res: Response) => {
+const getCart = async (req, res) => {
     const userId = req.user?._id;
     try {
         // Lấy giỏ hàng của user
@@ -55,25 +50,25 @@ const getCart = async (req: AuthenticatedRequest, res: Response) => {
         // Lấy chi tiết giỏ hàng
         const cartDetails = await OrderDetailModel.find({ orderId: cart._id })
             .populate({
-                path: 'bookId',
-                select: 'title salePrice imageURL', // Chỉ lấy title, salePrice và imageURL
-                model: 'book' // Tên model của bảng Books
-            })
+            path: 'bookId',
+            select: 'title salePrice imageURL', // Chỉ lấy title, salePrice và imageURL
+            model: 'book' // Tên model của bảng Books
+        })
             .exec();
         res.status(200).json({ message: "Lấy giỏ hàng thành công!", order: cart, orderDetails: cartDetails });
-    } catch (err) {
+    }
+    catch (err) {
         console.log(err);
         res.status(500).json({ message: "Lỗi máy chủ hệ thống!" });
     }
-}
-
+};
 /**
  * @des     Cập nhật giỏ hàng
  * @route   PUT '/order/updateCart'
  */
-const updateCart = async (req: AuthenticatedRequest, res: Response) => {
+const updateCart = async (req, res) => {
     const userId = req.user?._id;
-    const updatedOrderDetails = req.body.updatedOrderDetails as Array<OrderDetailType>;
+    const updatedOrderDetails = req.body.updatedOrderDetails;
     try {
         // Lấy giỏ hàng của user
         const cart = await getUserCart(userId);
@@ -92,7 +87,7 @@ const updateCart = async (req: AuthenticatedRequest, res: Response) => {
                 updateOne: {
                     filter: { _id: orderDetail._id },
                     update: {
-                        quantity: newQuantity,      // Cập nhật lại số lượng và thành tiền
+                        quantity: newQuantity, // Cập nhật lại số lượng và thành tiền
                         price: orderDetail.price
                     }
                 }
@@ -105,31 +100,28 @@ const updateCart = async (req: AuthenticatedRequest, res: Response) => {
         // Lấy chi tiết giỏ hàng
         const cartDetails = await OrderDetailModel.find({ orderId: cart._id })
             .populate({
-                path: 'bookId',
-                select: 'title salePrice imageURL',
-                model: 'book' // Tên model của bảng Books
-            })
+            path: 'bookId',
+            select: 'title salePrice imageURL',
+            model: 'book' // Tên model của bảng Books
+        })
             .exec();
         // Tính lại tổng tiền trong Order
         const totalPrice = cartDetails.reduce((acc, item) => acc + item.price, 0);
         // Cập nhật tổng tiền trong Order vào db
-        const updatedCart = await OrderModel.findOneAndUpdate(
-            { _id: cart._id },
-            { totalPrice: totalPrice },
-            { new: true }   // Trả về giá trị đã cập nhật
+        const updatedCart = await OrderModel.findOneAndUpdate({ _id: cart._id }, { totalPrice: totalPrice }, { new: true } // Trả về giá trị đã cập nhật
         ).exec();
-        res.status(200).json({ message: "Cập nhật sách trong giỏ hàng thành công!", order: updatedCart, orderDetails: cartDetails })
-    } catch (err) {
+        res.status(200).json({ message: "Cập nhật sách trong giỏ hàng thành công!", order: updatedCart, orderDetails: cartDetails });
+    }
+    catch (err) {
         console.log(err);
         res.status(500).json({ message: "Lỗi máy chủ hệ thống!" });
     }
-}
-
+};
 /**
  * @des     Xóa sách trong giỏ hàng
  * @route   DELETE '/order/deleteCart/:orderDetailId'
  */
-const deleteBookInCart = async (req: AuthenticatedRequest, res: Response) => {
+const deleteBookInCart = async (req, res) => {
     const userId = req.user?._id;
     const { orderDetailId } = req.params;
     try {
@@ -137,35 +129,33 @@ const deleteBookInCart = async (req: AuthenticatedRequest, res: Response) => {
         const cart = await getUserCart(userId);
         // Xóa orderDetail của cart trong csdl
         const result = await OrderDetailModel.findByIdAndDelete(orderDetailId).exec();
-        if (!result) throw new Error("Lỗi: Không thể xóa orderDetail được!");
+        if (!result)
+            throw new Error("Lỗi: Không thể xóa orderDetail được!");
         // Lấy chi tiết giỏ hàng
         const cartDetails = await OrderDetailModel.find({ orderId: cart._id })
             .populate({
-                path: 'bookId',
-                select: 'title salePrice imageURL',
-                model: 'book' // Tên model của bảng Books
-            })
+            path: 'bookId',
+            select: 'title salePrice imageURL',
+            model: 'book' // Tên model của bảng Books
+        })
             .exec();
         // Tính lại tổng tiền trong Order
         const totalPrice = cartDetails.reduce((acc, item) => acc + item.price, 0);
         // Cập nhật tổng tiền trong Order vào db
-        const updatedCart = await OrderModel.findOneAndUpdate(
-            { _id: cart._id },
-            { totalPrice: totalPrice },
-            { new: true }   // Trả về giá trị đã cập nhật
+        const updatedCart = await OrderModel.findOneAndUpdate({ _id: cart._id }, { totalPrice: totalPrice }, { new: true } // Trả về giá trị đã cập nhật
         ).exec();
-        res.status(200).json({ message: "Xóa sách trong giỏ hàng thành công!", order: updatedCart, orderDetails: cartDetails })
-    } catch (err) {
+        res.status(200).json({ message: "Xóa sách trong giỏ hàng thành công!", order: updatedCart, orderDetails: cartDetails });
+    }
+    catch (err) {
         console.log(err);
         res.status(500).json({ message: "Lỗi máy chủ hệ thống!" });
     }
-}
-
+};
 /**
  * @desc    Kiểm tra số lượng sách trong giỏ có thỏa mãn sau khi ấn 'Thanh toán'
  * @route   GET '/order/checkQuantityBook'
  */
-const checkQuantityBook = async (req: AuthenticatedRequest, res: Response) => {
+const checkQuantityBook = async (req, res) => {
     const { orderId } = req.query;
     try {
         // Lấy danh sách các cartDetails
@@ -193,21 +183,22 @@ const checkQuantityBook = async (req: AuthenticatedRequest, res: Response) => {
             }
         });
         if (!isQuantityValid) {
-            res.status(400).json({ message: `Sách '${invalidBook.title}' còn ${invalidBook.quantity} quyển. Hãy chỉnh lại số lượng trong giỏ!` })
-        } else {
-            res.status(200).json({ message: "Cho phép thanh toán!" })
+            res.status(400).json({ message: `Sách '${invalidBook.title}' còn ${invalidBook.quantity} quyển. Hãy chỉnh lại số lượng trong giỏ!` });
         }
-    } catch (err) {
+        else {
+            res.status(200).json({ message: "Cho phép thanh toán!" });
+        }
+    }
+    catch (err) {
         console.log(err);
         res.status(500).json({ message: "Lỗi máy chủ hệ thống!" });
     }
-}
-
+};
 /**
  * @desc    Tạo đơn đặt hàng khi người dùng ấn 'Hoàn tất đơn hàng'
  * @route   PUT '/order/createOrder'
  */
-const createOrder = async (req: AuthenticatedRequest, res: Response) => {
+const createOrder = async (req, res) => {
     const { order } = req.body;
     try {
         // Kiểm tra phoneNumber và address có chưa?
@@ -217,7 +208,7 @@ const createOrder = async (req: AuthenticatedRequest, res: Response) => {
         }
         //------------------------------------------------------
         // Cập nhật lại số lượng sách tồn kho sau khi mua
-        const orderDetails = await OrderDetailModel.find({orderId: order.id}).exec();
+        const orderDetails = await OrderDetailModel.find({ orderId: order.id }).exec();
         const bulkUpdates = [];
         for (const orderDetail of orderDetails) {
             const quantityAdded = orderDetail.quantity;
@@ -227,7 +218,7 @@ const createOrder = async (req: AuthenticatedRequest, res: Response) => {
                 updateOne: {
                     filter: { _id: orderDetail.bookId },
                     update: {
-                        quantity: book?.quantity! - quantityAdded,      // Cập nhật lại số lượng trong kho
+                        quantity: book?.quantity - quantityAdded, // Cập nhật lại số lượng trong kho
                     }
                 }
             });
@@ -235,16 +226,12 @@ const createOrder = async (req: AuthenticatedRequest, res: Response) => {
         await BookModel.bulkWrite(bulkUpdates);
         //------------------------------------------------------
         // Cập nhật orderStatus từ 'Cart' -> 'Order'
-        const updatedOrder = await OrderModel.findByIdAndUpdate(
-            order.id,
-            {
-                orderStatus: 'Order',
-                paymentType: order.paymentType,
-                phoneNumber: order.phoneNumber,
-                address: order.address
-            },
-            { new: true }
-        )
+        const updatedOrder = await OrderModel.findByIdAndUpdate(order.id, {
+            orderStatus: 'Order',
+            paymentType: order.paymentType,
+            phoneNumber: order.phoneNumber,
+            address: order.address
+        }, { new: true })
             .exec();
         if (!updatedOrder) {
             res.status(400).json({ message: "Tạo đơn hàng không thành công!" });
@@ -253,18 +240,18 @@ const createOrder = async (req: AuthenticatedRequest, res: Response) => {
         res.status(200).json({
             message: "Đặt hàng thành công!",
             order: updatedOrder
-        })
-    } catch (err) {
+        });
+    }
+    catch (err) {
         console.log(err);
         res.status(500).json({ message: "Lỗi máy chủ hệ thống!" });
     }
-}
-
+};
 /**
  * @desc    Lấy danh sách đơn hàng của người dùng (Gồm đơn đặt và hóa đơn)
  * @route   GET '/order/getOrders'
  */
-const getOrders = async (req: AuthenticatedRequest, res: Response) => {
+const getOrders = async (req, res) => {
     const userId = req.user?._id;
     const deliveryBrand = 'ViettelPost';
     try {
@@ -284,17 +271,17 @@ const getOrders = async (req: AuthenticatedRequest, res: Response) => {
             message: "Lấy danh sách đơn hàng thành công!",
             orders: ordersWithDeliveryBrand
         });
-    } catch (err) {
+    }
+    catch (err) {
         console.log(err);
         res.status(500).json({ message: "Lỗi máy chủ hệ thống!" });
     }
-}
-
+};
 /**
  * @desc    Lấy chi tiết đơn hàng
  * @route   GET '/order/getOrderDetails/:orderId'
  */
-const getOrderDetails = async (req: AuthenticatedRequest, res: Response) => {
+const getOrderDetails = async (req, res) => {
     const orderId = req.params.orderId;
     try {
         // Lấy thông tin order
@@ -305,25 +292,16 @@ const getOrderDetails = async (req: AuthenticatedRequest, res: Response) => {
         }
         const orderDetails = await OrderDetailModel.find({ orderId })
             .populate({
-                path: 'bookId',
-                select: '_id title salePrice imageURL',
-                model: 'book'
-            })
+            path: 'bookId',
+            select: '_id title salePrice imageURL',
+            model: 'book'
+        })
             .exec();
         res.status(200).json({ message: "Lấy chi tiết đơn hàng thành công!", order, orderDetails });
-    } catch (err) {
+    }
+    catch (err) {
         console.log(err);
         res.status(500).json({ message: "Lỗi máy chủ hệ thống!" });
     }
-}
-
-export {
-    addBookToCart,
-    getCart,
-    updateCart,
-    deleteBookInCart,
-    getOrders,
-    getOrderDetails,
-    checkQuantityBook,
-    createOrder
-}
+};
+export { addBookToCart, getCart, updateCart, deleteBookInCart, getOrders, getOrderDetails, checkQuantityBook, createOrder };
