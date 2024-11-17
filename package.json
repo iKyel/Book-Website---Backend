@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node dist/app.js",
-    "dev": "concurrently \"tsc -w\" \"nodemon dist/app.js\"",
+    "dev": "concurrently \"tsc -w\" \"nodemon dist/src/app.js\"",
     "build": "tsc",
     "vercel-build": "echo hello",
     "test": "jest"

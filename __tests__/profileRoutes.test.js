@@ -1,7 +1,7 @@
-import { getProfileUser } from "../dist/controllers/profileControllers.js";
+import { getProfileUser } from "../dist/src/controllers/profileControllers.js";
 
 // Mock the UserModel
-jest.mock("../dist/models/UserModel.js", () => ({
+jest.mock("../dist/src/models/UserModel.js", () => ({
   findOne: jest.fn(),
 }));
 

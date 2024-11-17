@@ -6,12 +6,12 @@ const OrderSchema = new mongoose.Schema({
     },
     orderStatus: {
         type: String,
-        enum: ['Order', 'Invoice'],
-        default: 'Order'
+        enum: ['Cart', 'Order', 'Invoice'],
+        default: 'Cart'
     },
     paymentType: {
         type: String,
-        enum: ['PayPal, COD'],
+        enum: ['PayPal', 'COD'],
         default: 'COD'
     },
     totalPrice: {
@@ -20,11 +20,9 @@ const OrderSchema = new mongoose.Schema({
     },
     phoneNumber: {
         type: String,
-        required: true
     },
     address: {
         type: String,
-        required: true
     }
 }, {
     timestamps: true

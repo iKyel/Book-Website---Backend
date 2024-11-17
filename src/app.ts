@@ -7,6 +7,7 @@ import 'dotenv/config';
 import { profileRouter } from "./routes/profileRoutes.js";
 import { authRouter } from "./routes/authRoutes.js";
 import { bookRouter } from "./routes/bookRoutes.js";
+import { orderRouter } from "./routes/orderRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -37,6 +38,10 @@ app.use('/auth', authRouter);
 // Routes for books
 app.use('/books', bookRouter);
 
+
+// Route for order
+app.use('/order', orderRouter);
+
 // Connect to db and load server if success
 try {
     await mongoose.connect(MONGODB_URI);
@@ -48,4 +53,5 @@ try {
     console.log(error);
 }
 
-export default app
+export default app;
+

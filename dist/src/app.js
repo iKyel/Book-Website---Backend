@@ -7,6 +7,7 @@ import 'dotenv/config';
 import { profileRouter } from "./routes/profileRoutes.js";
 import { authRouter } from "./routes/authRoutes.js";
 import { bookRouter } from "./routes/bookRoutes.js";
+import { orderRouter } from "./routes/orderRoutes.js";
 const app = express();
 const PORT = process.env.PORT || 8000;
 const MONGODB_URI = process.env.MONGODB_URI || '';
@@ -15,7 +16,7 @@ app.use(express.json()); // Parsing json from request body
 app.use(cookieParser()); // Parsing cookie form request
 // Middleware for handling CORS Policy
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: 'https://book-website-frontend.vercel.app',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
     credentials: true
@@ -29,19 +30,17 @@ app.use('/profile', profileRouter);
 app.use('/auth', authRouter);
 // Routes for books
 app.use('/books', bookRouter);
-// Tạo hàm async để kết nối DB
-const startServer = async () => {
-    // Connect to db and load server if success
-    try {
-        await mongoose.connect(MONGODB_URI);
-        console.log('App connected to database');
-        app.listen(PORT, () => {
-            console.log(`App is listening to port: http://localhost:${PORT}`);
-        });
-    }
-    catch (error) {
-        console.log(error);
-    }
-};
-
+// Route for order
+app.use('/order', orderRouter);
+// Connect to db and load server if success
+try {
+    await mongoose.connect(MONGODB_URI);
+    console.log('App connected to database');
+    app.listen(PORT, () => {
+        console.log(`App is listening to port: http://localhost:${PORT}`);
+    });
+}
+catch (error) {
+    console.log(error);
+}
 export default app;
