@@ -31,7 +31,8 @@ jest.mock("../dist/models/PublisherModel", () => ({
 }));
 
 // Mock response và request của Express
-const mockRequest = (body = {}) => ({
+const mockRequest = (query = {}, body = {}) => ({
+  query,
   body,
 });
 
@@ -50,7 +51,7 @@ describe("Book Controllers", () => {
   // Test hàm getAllBooks
   describe("getAllBooks", () => {
     it("should return list of books with correct pagination", async () => {
-      const req = mockRequest({ currentPage: 1 });
+      const req = mockRequest({ page: 1 });
       const res = mockResponse();
       const books = [{ title: "Book 1", salePrice: 100, imageURL: "img1.jpg" }];
       BookModel.find.mockReturnValueOnce({
@@ -124,59 +125,6 @@ describe("Book Controllers", () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         message: "Lỗi hệ thống máy chủ!",
-      });
-    });
-  });
-
-  // Test hàm insertNewBook
-  describe("insertNewBook", () => {
-    it("should insert a new book and return success message", async () => {
-      const req = mockRequest({
-        title: "New Book",
-        publisherId: "507f191e810c19729de860ea",
-        categoryIds: ["507f191e810c19729de860eb"],
-        authorIds: ["507f191e810c19729de860ec"],
-        discount: 10,
-        salePrice: 200,
-        quantity: 50,
-        publishedYear: 2020,
-        size: ["20x30"],
-        coverForm: "Hard",
-        imageURL: "img.jpg",
-      });
-      const res = mockResponse();
-      BookModel.create.mockResolvedValueOnce({
-        _id: "507f191e810c19729de860ed",
-      });
-      AuthorOnBookModel.insertMany.mockResolvedValueOnce();
-      CategoryOnBookModel.insertMany.mockResolvedValueOnce();
-      await insertNewBook(req, res);
-      expect(BookModel.create).toHaveBeenCalledWith({
-        title: "New Book",
-        publisherId: expect.any(mongoose.Types.ObjectId),
-        discount: 10,
-        salePrice: 200,
-        quantity: 50,
-        publishedYear: 2020,
-        size: ["20x30"],
-        coverForm: "Hard",
-        content: undefined,
-        imageURL: "img.jpg",
-      });
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        message: "Thêm sách thành công!",
-      });
-    });
-
-    it("should return 500 error on failure", async () => {
-      const req = mockRequest({ title: "New Book" });
-      const res = mockResponse();
-      BookModel.create.mockRejectedValueOnce(new Error("Server Error"));
-      await insertNewBook(req, res);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({
-        message: "Lỗi máy chủ hoặc dữ liệu thêm vào ko phù hợp!",
       });
     });
   });

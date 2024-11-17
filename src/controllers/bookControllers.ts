@@ -108,8 +108,6 @@ const getFilteredBooks = async (req: Request, res: Response) => {
                 })
                 .exec()
             ).map(item => item._id);
-            // const bookIdByCategories = (await CategoryOnBookModel.find({ categoryId: { $in: categoryIds } })
-            //     .exec()).map(item => item.bookId);
             args._id = { $in: bookIdByCategories };
         }
         // Lọc theo tiêu chí sắp xếp

@@ -94,8 +94,6 @@ const getFilteredBooks = async (req, res) => {
                 numberOfDocs: categoryIds.length
             })
                 .exec()).map(item => item._id);
-            const bookIdByCategories = (await CategoryOnBookModel.find({ categoryId: { $in: categoryIds } })
-                .exec()).map(item => item.bookId);
             args._id = { $in: bookIdByCategories };
         }
         // Lọc theo tiêu chí sắp xếp
@@ -343,8 +341,8 @@ const getDetailAuthor = async (req, res) => {
                 numberOfDocs: categoryIds.length
             })
                 .exec()).map(item => item._id);
-            const bookIdByCategories = (await CategoryOnBookModel.find({ categoryId: { $in: categoryIds } })
-                .exec()).map(item => item.bookId);
+            // const bookIdByCategories = (await CategoryOnBookModel.find({ categoryId: { $in: categoryIds } })
+            //     .exec()).map(item => item.bookId);
             bookIds = bookIdByCategories.filter(bookIdByCategory => bookIdByAuthors.includes(bookIdByCategory.toString())); // Tìm các bookId vừa thuộc author và categories
         }
         else {
