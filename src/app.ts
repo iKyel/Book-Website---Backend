@@ -19,7 +19,7 @@ app.use(cookieParser());    // Parsing cookie form request
 
 // Middleware for handling CORS Policy
 app.use(cors({      // Allow custom origins
-    origin: 'https://book-website-frontend.vercel.app',
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
     credentials: true
@@ -37,7 +37,6 @@ app.use('/auth', authRouter);
 
 // Routes for books
 app.use('/books', bookRouter);
-
 
 // Route for order
 app.use('/order', orderRouter);
