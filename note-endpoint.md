@@ -70,7 +70,7 @@
 * '/order': Các chức năng liên quan đến đơn đặt và giỏ hàng
     - POST '/addCart':
         + 200: { message: "Thêm sách vào giỏ hàng thành công!" }
-        + 400: { message: 'Sách này còn ${soLgTonKho}. Hãy giảm bớt!' }
+        + 400: { message: 'Số lượng sách trong giỏ vượt quá số lượng sách tồn. Hãy thử lại!' }
         + 500: { message: "Lỗi máy chủ hệ thống!" }
     - GET '/getCart':
         + 200: { message: "Lấy giỏ hàng thành công!", order: cart, orderDetails: cartDetails }
