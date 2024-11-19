@@ -139,7 +139,8 @@ const getFilteredBooks = async (req, res) => {
             });
         }
         // Chọn các trường cần thiết và sắp xếp
-        query = query.sort(sortOption)
+        query = query.collation({ locale: 'vi' }) // Thêm `collation` để sắp xếp tiếng Việt
+            .sort(sortOption)
             .project({
             _id: 1,
             title: 1,
@@ -390,7 +391,8 @@ const getDetailAuthor = async (req, res) => {
                 totalQuantitySold: { $sum: '$orders.quantity' }
             });
         }
-        query = query.sort(sortOption)
+        query = query.collation({ locale: 'vi' }) // Thêm `collation` để sắp xếp tiếng Việt
+            .sort(sortOption)
             .project({
             _id: 1,
             title: 1,

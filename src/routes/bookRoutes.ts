@@ -17,7 +17,7 @@ const bookRouter = express.Router();
 bookRouter.get('/getBooks', getAllBooks);
 
 // Lấy danh sách các sách theo lọc, sắp xếp theo 1 tiêu chí (a-z, z-a, newest, oldest, bestseller)
-bookRouter.get('/getFilteredBooks', getFilteredBooks);  // 
+bookRouter.get('/getFilteredBooks', getFilteredBooks);  //
 
 // Lấy danh sách các sách theo tên tìm kiếm
 bookRouter.get('/getBooksByName', getBooksByName);  //
