@@ -351,11 +351,6 @@ const getDetailAuthor = async (req, res) => {
                 numberOfDocs: categoryIds.length
             })
                 .exec()).map(item => item._id);
-<<<<<<< HEAD
-            // const bookIdByCategories = (await CategoryOnBookModel.find({ categoryId: { $in: categoryIds } })
-            //     .exec()).map(item => item.bookId);
-=======
->>>>>>> 293be2454318d098c5ced49ffbb3688e6bd267c2
             bookIds = bookIdByCategories.filter(bookIdByCategory => bookIdByAuthors.includes(bookIdByCategory.toString())); // Tìm các bookId vừa thuộc author và categories
         }
         else {
