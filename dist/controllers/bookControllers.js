@@ -113,10 +113,10 @@ const getFilteredBooks = async (req, res) => {
                 sortOption.title = -1;
                 break;
             case 'newest':
-                sortOption.createAt = -1;
+                sortOption.createdAt = -1;
                 break;
             case 'oldest':
-                sortOption.createAt = 1;
+                sortOption.createdAt = 1;
                 break;
             case 'best-seller':
                 sortOption.totalQuantitySold = -1;
@@ -146,7 +146,7 @@ const getFilteredBooks = async (req, res) => {
             title: 1,
             salePrice: 1,
             imageURL: 1,
-            createAt: 1,
+            createdAt: 1,
         });
         // Lấy các sách của trang hiện tại
         const listBooks = await query.skip((Number(page) - 1) * BOOKS_PER_PAGE)
@@ -367,10 +367,10 @@ const getDetailAuthor = async (req, res) => {
                 sortOption.title = -1;
                 break;
             case 'newest':
-                sortOption.createAt = -1;
+                sortOption.createdAt = -1;
                 break;
             case 'oldest':
-                sortOption.createAt = 1;
+                sortOption.createdAt = 1;
                 break;
             case 'best-seller':
                 sortOption.totalQuantitySold = -1;
@@ -398,7 +398,7 @@ const getDetailAuthor = async (req, res) => {
             title: 1,
             salePrice: 1,
             imageURL: 1,
-            createAt: 1
+            createdAt: 1
         });
         // Lấy các sách của trang hiện tại
         const listBooks = await query.skip((Number(page) - 1) * BOOKS_PER_PAGE)
