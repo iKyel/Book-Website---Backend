@@ -37,6 +37,14 @@ const getBooksByName = async (req, res) => {
         // const { searchName, currentPage } = req.body;
         const searchName = req.query.searchName || '';
         const page = req.query.page || 1;
+        // Tính tổng số sách khớp với tìm kiếm
+        const totalBook = await BookModel.countDocuments({
+            title: {
+                $regex: searchName,
+                $options: 'i'
+            }
+        }).exec();
+        // Lấy các sách của trang hiện tại
         const listBooks = await BookModel.find({
             title: {
                 $regex: searchName,
@@ -49,7 +57,7 @@ const getBooksByName = async (req, res) => {
             .exec();
         res.status(200).json({
             message: 'Lấy danh sách các sách thành công!',
-            listBooks
+            listBooks, totalBook
         });
     }
     catch (err) {
@@ -62,7 +70,6 @@ const getBooksByName = async (req, res) => {
  * @route   POST '/books/getFilteredBooks'
  */
 const getFilteredBooks = async (req, res) => {
-    // const { categoryNames, priceRange, sortByOrder, currentPage } = req.body;
     const page = req.query.page || 1;
     const sortBy = req.query.sortBy || 'a-z';
     const types = req.query.types;
@@ -94,8 +101,6 @@ const getFilteredBooks = async (req, res) => {
                 numberOfDocs: categoryIds.length
             })
                 .exec()).map(item => item._id);
-            // const bookIdByCategories = (await CategoryOnBookModel.find({ categoryId: { $in: categoryIds } })
-            //     .exec()).map(item => item.bookId);
             args._id = { $in: bookIdByCategories };
         }
         // Lọc theo tiêu chí sắp xếp
@@ -119,6 +124,8 @@ const getFilteredBooks = async (req, res) => {
         }
         // Xây dựng query chung
         let query = BookModel.aggregate().match(args);
+        // Lấy tổng số sách để hiển thị tổng số trang
+        const totalBook = (await query.exec()).length;
         // Nếu là best-seller thì cần join với OrderDetails và tính tổng số lượng bán
         if (sortBy === 'best-seller') {
             query = query.lookup({
@@ -139,18 +146,18 @@ const getFilteredBooks = async (req, res) => {
             salePrice: 1,
             imageURL: 1,
             createAt: 1,
-        })
-            .skip((Number(page) - 1) * BOOKS_PER_PAGE)
-            .limit(BOOKS_PER_PAGE);
-        // Thực thi query (Lấy danh sách các sách phù hợp với tiêu chí trên)
-        const listBooks = await query.exec();
+        });
+        // Lấy các sách của trang hiện tại
+        const listBooks = await query.skip((Number(page) - 1) * BOOKS_PER_PAGE)
+            .limit(BOOKS_PER_PAGE)
+            .exec();
         if (listBooks.length === 0) {
             res.status(404).json({ message: 'Không tìm thấy sách theo yêu cầu!' });
             return;
         }
         res.status(200).json({
             message: 'Lấy danh sách các sách thành công!',
-            listBooks
+            listBooks, totalBook
         });
     }
     catch (err) {
@@ -343,8 +350,6 @@ const getDetailAuthor = async (req, res) => {
                 numberOfDocs: categoryIds.length
             })
                 .exec()).map(item => item._id);
-            // const bookIdByCategories = (await CategoryOnBookModel.find({ categoryId: { $in: categoryIds } })
-            //     .exec()).map(item => item.bookId);
             bookIds = bookIdByCategories.filter(bookIdByCategory => bookIdByAuthors.includes(bookIdByCategory.toString())); // Tìm các bookId vừa thuộc author và categories
         }
         else {
@@ -370,7 +375,10 @@ const getDetailAuthor = async (req, res) => {
                 sortOption.totalQuantitySold = -1;
                 break;
         }
+        // Xây dựng query chung
         let query = BookModel.aggregate().match(args);
+        // Lấy tổng số sách để hiển thị tổng số trang
+        const totalBook = (await query.exec()).length;
         if (sortBy === 'best-seller') { // Nếu là 'best-seller' thì innerJoin với OrderDetails
             query = query.lookup({
                 from: 'OrderDetails',
@@ -389,15 +397,16 @@ const getDetailAuthor = async (req, res) => {
             salePrice: 1,
             imageURL: 1,
             createAt: 1
-        })
-            .skip((Number(page) - 1) * BOOKS_PER_PAGE)
-            .limit(BOOKS_PER_PAGE);
-        const listBooks = await query.exec();
+        });
+        // Lấy các sách của trang hiện tại
+        const listBooks = await query.skip((Number(page) - 1) * BOOKS_PER_PAGE)
+            .limit(BOOKS_PER_PAGE)
+            .exec();
         if (listBooks.length === 0) {
             res.status(404).json({ message: 'Không có sách nào phù hợp!', author });
             return;
         }
-        res.status(200).json({ message: 'Lấy chi tiết tác giả thành công!', author, listBooks });
+        res.status(200).json({ message: 'Lấy chi tiết tác giả thành công!', author, listBooks, totalBook });
     }
     catch (err) {
         console.error(err);
