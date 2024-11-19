@@ -18,12 +18,11 @@ app.use(express.json());    // Parsing json from request body
 app.use(cookieParser());    // Parsing cookie form request
 
 // Middleware for handling CORS Policy
-app.use(cors({      // Allow custom origins
-    origin: '*',
+app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
     credentials: true
-}))
+}));
 
 app.get('/', (req, res) => {
     res.send("Home Page");
