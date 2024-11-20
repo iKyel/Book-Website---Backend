@@ -14,18 +14,24 @@ const loginUser = async (req: Request, res: Response) => {
             const isCompare = await bcrypt.compare(password, user.password);
             if (isCompare) {   // If password is valid then create token for user save in cookie
                 const token = jwt.sign({ userId: user._id, userName: user.userName }, SECRET_KEY, { expiresIn: '1d' });
-                res.cookie('token', token);
+                res.cookie('token', token, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'none',
+                    maxAge: 24 * 60 * 60 * 1000 // 1 day in milliseconds
+                });
                 res.status(200).json({ message: 'Đăng nhập thành công!', userData: { fullName: user.fullName, userName: user.userName } });
                 return;
             }
         }
         // userName or password not correct
-        res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng!' })
+        res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng!' });
     } catch (err) {
         console.log(err);
-        res.status(500).json({ message: 'Lỗi hệ thống máy chủ.' })
+        res.status(500).json({ message: 'Lỗi hệ thống máy chủ.' });
     }
-}
+};
+
 
 // Controller for register
 const registerUser = async (req: Request, res: Response) => {
