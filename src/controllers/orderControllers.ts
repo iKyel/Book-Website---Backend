@@ -21,7 +21,7 @@ const addBookToCart = async (req: AuthenticatedRequest, res: Response) => {
             existCartDetail.quantity += Number(soLgSachThem);
             existCartDetail.price += Number(price);
             if (existCartDetail.quantity > soLgTonKho) {    // Ktra tổng số lượng sách thêm trong giỏ
-                res.status(400).json({ message: `Sách này còn ${soLgTonKho}. Hãy giảm bớt!` });
+                res.status(400).json({ message: `Số lượng sách trong giỏ vượt quá số lượng sách tồn. Hãy thử lại!` });
                 return;
             }
             await existCartDetail.save();
@@ -84,7 +84,7 @@ const updateCart = async (req: AuthenticatedRequest, res: Response) => {
             const newQuantity = orderDetail.quantity;
             const book = await BookModel.findById(orderDetail.bookId).exec();
             if (!book || newQuantity > book.quantity) {
-                res.status(400).json({ message: `Sách '${book?.title}' còn ${book?.quantity}. Hãy giảm bớt!` });
+                res.status(400).json({ message: `Sách '${book?.title}' còn ${book?.quantity} cuốn. Hãy giảm bớt!` });
                 return;
             }
             // Thêm lệnh update vào bulk
