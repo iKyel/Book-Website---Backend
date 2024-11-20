@@ -49,3 +49,51 @@
     - GET '/getCategories': Lấy danh sách các thể loại
         + 200: { message: 'Lấy danh sách các thể loại thành công!', categories}
         + 500: { message: 'Lỗi hệ thống máy chủ!' }
+    - GET '/getAuthors': Lấy danh sách các tác giả
+        + 200: { message: 'Lấy danh sách các tác giả thành công!', authors}
+        + 500: { message: 'Lỗi hệ thống máy chủ!' }
+    - GET '/getPublishers': Lấy danh sách các nhà xuất bản
+        + 200: { message: 'Lấy danh sách các nhà xuất bản thành công!', publishers}
+        + 500: { message: 'Lỗi hệ thống máy chủ!' }
+    - GET '/getDetailBook/:bookId': Lấy chi tiết của sách và các sách liên quan
+        + 200: { message: 'Lấy chi tiết cuốn sách thành công!', detailBook, listBooks }
+        + 404: { message: 'Không tìm thấy cuốn sách này!' }
+        + 500: { message: 'Lỗi hệ thống máy chủ!' }
+    - GET '/getDetailAuthor/:authorId': Lấy chi tiết tác giả và các sách liên quan
+        + 200: { message: 'Lấy chi tiết tác giả thành công!', author, listBooks }
+        + 404: { message: 'Không tìm thấy tác giả này!' }
+        + 404: { message: 'Không có sách nào phù hợp!', author }
+        + 500: { message: 'Lỗi hệ thống máy chủ!' }
+
+/----------------------------------------------------/
+
+* '/order': Các chức năng liên quan đến đơn đặt và giỏ hàng
+    - POST '/addCart':
+        + 200: { message: "Thêm sách vào giỏ hàng thành công!" }
+        + 400: { message: 'Số lượng sách trong giỏ vượt quá số lượng sách tồn. Hãy thử lại!' }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
+    - GET '/getCart':
+        + 200: { message: "Lấy giỏ hàng thành công!", order: cart, orderDetails: cartDetails }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
+    - PUT '/updateCart':
+        + 200: { message: "Cập nhật sách trong giỏ hàng thành công!", order: updatedCart, orderDetails: cartDetails }
+        + 400: { message: 'Sách '${book?.title}' còn ${book?.quantity}. Hãy giảm bớt!' }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
+    - DELETE '/deleteCart/:orderDetailId':
+        + 200: { message: "Xóa sách trong giỏ hàng thành công!", order: updatedCart, orderDetails: cartDetails }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
+    - GET '/order/checkQuantityBook':
+        + 200: { message: "Cho phép thanh toán!" }
+        + 400: { message: 'Sách '${invalidBook.title}' còn ${invalidBook.quantity} quyển. Hãy chỉnh lại số lượng trong giỏ!' }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
+    - PUT '/order/createOrder':
+        + 200: { message: "Đặt hàng thành công!", order: updatedOrder }
+        + 400: { message: "Hãy điền đầy đủ số điện thoại và địa chỉ nhận hàng!" }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
+    - GET '/order/getOrders':
+        + 200: { message: "Lấy danh sách đơn hàng thành công!", orders: ordersWithDeliveryBrand }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
+    - GET '/order/getOrderDetails/:orderId':
+        + 200: { message: "Lấy chi tiết đơn hàng thành công!", order, orderDetails }
+        + 400: { message: "Không tìm thấy mã đơn hàng này!" }
+        + 500: { message: "Lỗi máy chủ hệ thống!" }
