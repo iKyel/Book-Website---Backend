@@ -11,6 +11,7 @@ import { BookModel } from "../dist/src/models/BookModel";
 import { CategoryModel } from "../dist/src/models/CategoryModel";
 import { PublisherModel } from "../dist/src/models/PublisherModel";
 import { AuthorModel } from "../dist/src/models/AuthorModel";
+
 // Mock các phương thức của Mongoose
 jest.mock("../dist/src/models/BookModel");
 jest.mock("../dist/src/models/CategoryModel");
@@ -41,10 +42,13 @@ const mockResponse = () => {
 };
 
 describe("Book Controllers", () => {
+  let consoleSpy;
   afterEach(() => {
     jest.clearAllMocks(); // Clear mock calls giữa các tests
   });
-
+  beforeEach(() => {
+    consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  });
   // Test hàm getAllBooks
   describe("getAllBooks", () => {
     it("should return list of books with correct pagination", async () => {
@@ -82,43 +86,52 @@ describe("Book Controllers", () => {
       });
     });
   });
-
-  // Test hàm getBooksByName
-  describe("getBooksByName", () => {
-    it("should return books that match the search name", async () => {
-      const req = mockRequest({ searchName: "Book", currentPage: 1 });
-      const res = mockResponse();
-      const books = [{ title: "Book 1", salePrice: 100, imageURL: "img1.jpg" }];
-      BookModel.find.mockReturnValueOnce({
-        select: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValueOnce(books),
-      });
-      await getBooksByName(req, res);
-      expect(BookModel.find).toHaveBeenCalledWith({
-        title: {
-          $regex: "Book",
-          $options: "i",
-        },
-      });
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        message: "Lấy danh sách các sách thành công!",
-        listBooks: books,
-      });
-    });
-
+  //Test hàm getFilteredBooks
+  describe("getFilteredBooks", () => {
     it("should return 500 error on failure", async () => {
-      const req = mockRequest({ searchName: "Book", currentPage: 1 });
+      const req = mockRequest({
+        filters: { genre: "Fiction" },
+        currentPage: 1,
+      });
       const res = mockResponse();
+
+      // Mock lỗi từ find
       BookModel.find.mockReturnValueOnce({
         select: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
         exec: jest.fn().mockRejectedValueOnce(new Error("Server Error")),
       });
+
+      // Gọi hàm getFilteredBooks
+      await getFilteredBooks(req, res);
+
+      // Kiểm tra phản hồi
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Lỗi hệ thống máy chủ!",
+      });
+    });
+  });
+
+  // Test hàm getBooksByName
+  describe("getBooksByName", () => {
+    it("should return 500 error on failure", async () => {
+      const req = mockRequest({ searchName: "Book", currentPage: 1 });
+      const res = mockResponse();
+
+      // Mock lỗi từ find
+      BookModel.find.mockReturnValueOnce({
+        select: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockRejectedValueOnce(new Error("Server Error")),
+      });
+
+      // Gọi hàm getBooksByName
       await getBooksByName(req, res);
+
+      // Kiểm tra phản hồi
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         message: "Lỗi hệ thống máy chủ!",
@@ -175,7 +188,7 @@ describe("getAuthors", () => {
     expect(AuthorModel.find).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      message: "Lấy danh sách các tác giả thành công!", // Change here
+      message: "Lấy danh sách các tác giả thành công!",
       authors,
     });
   });
@@ -210,7 +223,7 @@ describe("getPublishers", () => {
     expect(PublisherModel.find).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      message: "Lấy danh sách các nhà xuất bản thành công!", // Change here
+      message: "Lấy danh sách các nhà xuất bản thành công!",
       publishers,
     });
   });

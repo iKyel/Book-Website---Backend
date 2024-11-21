@@ -1,4 +1,7 @@
-import { loginUser, logoutUser } from "../dist/src/controllers/authControllers.js";
+import {
+  loginUser,
+  logoutUser,
+} from "../dist/src/controllers/authControllers.js";
 import { UserModel } from "../dist/src/models/UserModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -10,6 +13,7 @@ jest.mock("jsonwebtoken");
 
 describe("loginUser", () => {
   let req, res;
+  let consoleSpy;
 
   beforeEach(() => {
     // Khởi tạo giá trị mock cho req và res
@@ -24,7 +28,7 @@ describe("loginUser", () => {
       json: jest.fn(),
       cookie: jest.fn(),
     };
-
+    consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     // Clear mock data trước mỗi test
     jest.clearAllMocks();
   });

@@ -8,6 +8,7 @@ jest.mock("bcrypt");
 
 describe("registerUser", () => {
   let req, res;
+  let consoleSpy;
 
   beforeEach(() => {
     // Khởi tạo giá trị mock cho req và res
@@ -22,7 +23,7 @@ describe("registerUser", () => {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
-
+    consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     // Clear mock data trước mỗi test
     jest.clearAllMocks();
   });

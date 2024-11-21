@@ -30,10 +30,13 @@ const mockResponse = () => {
 };
 
 describe("Auth Controllers", () => {
+  let consoleSpy;
   afterEach(() => {
     jest.clearAllMocks(); // Clear mocks between tests
   });
-
+  beforeEach(() => {
+    consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  });
   test("should logout successfully", async () => {
     const req = mockRequest();
     const res = mockResponse();
