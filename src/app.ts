@@ -19,7 +19,7 @@ app.use(cookieParser());    // Parsing cookie form request
 
 // Middleware for handling CORS Policy
 app.use(cors({
-    origin: 'https://www.booknext.store/',
+    origin: 'https://www.booknext.store',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
     credentials: true
